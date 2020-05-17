@@ -1,0 +1,571 @@
+% \iffalse meta-comment
+%<*internal|sty>
+\def\Version{2019/02/19 v0.1}
+%</internal|sty>
+%<*internal>
+\iffalse
+%</internal>
+%<*internal>
+\fi
+\def\nameofplainTeX{plain}
+\ifx\fmtname\nameofplainTeX\else
+  \expandafter\begingroup
+\fi
+%</internal>
+%<*install>
+\input docstrip.tex
+\keepsilent
+\askforoverwritefalse
+\preamble
+---------------------------------------------------------------------------
+yarecipe --- Maps for interactive fiction with TikZ
+
+ Author: Alex Ball
+ E-mail: ab318@bath.ac.uk
+License: Released under the LaTeX Project Public License v1.3c or later
+    See: http://www.latex-project.org/lppl.txt
+---------------------------------------------------------------------------
+
+\endpreamble
+\postamble
+
+Copyright (C) 2019 by Alex Ball <ab318@bath.ac.uk>
+
+This work may be distributed and/or modified under the
+conditions of the LaTeX Project Public License (LPPL), either
+version 1.3c of this license or (at your option) any later
+version.  The latest version of this license is in the file:
+
+http://www.latex-project.org/lppl.txt
+
+This work is "maintained" (as per LPPL maintenance status) by
+Alex Ball.
+
+\endpostamble
+
+\usedir{tex/latex/\jobname}
+\generate{
+  \file{yarecipe.sty}{\from{\jobname.dtx}{sty}}
+}
+%</install>
+%<install>\endbatchfile
+%<*internal>
+\usedir{source/latex/\jobname}
+\generate{
+  \file{\jobname.ins}{\from{\jobname.dtx}{install}}
+}
+\nopreamble\nopostamble
+\ifx\fmtname\nameofplainTeX
+  \expandafter\endbatchfile
+\else
+  \expandafter\endgroup
+\fi
+%</internal>
+% \fi
+%
+% \iffalse
+%<*driver>
+\ProvidesFile{yarecipe.dtx}
+%</driver>
+%<sty>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
+%<sty>\ProvidesPackage{yarecipe}
+%<*sty>
+    [\Version\space Maps for interactive fiction with TikZ]
+%</sty>
+%<*driver>
+\documentclass[12pt]{article}
+% Page Layout
+\usepackage[a4paper,hmargin=30mm,vmargin=25mm,nohead]{geometry}
+% Typography
+% \usepackage[charter,expert]{mathdesign}
+% \makeatletter
+% \def\hrulefill{\leavevmode\leaders \hrule height \rulethickness \hfill\kern\z@}
+% \makeatother
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+  \usepackage[T1]{fontenc}
+  \usepackage[scaled=0.95,tabular]{sourceserifpro}
+  \usepackage[scaled=0.95,tabular]{sourcesanspro}
+  \usepackage[varl,varqu]{zi4}
+\else
+  \usepackage[no-math]{fontspec}
+  \setmainfont
+    [Scale=MatchLowercase
+    ,Ligatures=TeX
+    ]%
+    {Source Serif Pro}
+  \setsansfont
+    [Scale=MatchLowercase
+    ,Ligatures=TeX
+    ,StylisticSet=4
+    ,BoldFont={Source Sans Pro Bold}
+    ,ItalicFont={Source Sans Pro Italic}
+    ,BoldItalicFont={Source Sans Pro Bold Italic}
+    ]%
+    {Source Sans Pro}
+  \setmonofont
+    [Scale=MatchLowercase
+    ,RawFeature={extend=0.83}
+    ,BoldFont={Source Code Pro Bold}
+    ,BoldItalicFont={Source Code Pro Bold}
+    ,AutoFakeSlant=0.2
+    ,ItalicFeatures={StylisticSet=2,StylisticSet=3}
+    ,BoldItalicFeatures={FakeSlant=0.2,StylisticSet=2,StylisticSet=3}
+    ]%
+    {Source Code Pro}
+\fi
+\usepackage[italic]{mathastext}
+% Improving the look of the documentation
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+\usepackage{multicol}
+\usepackage{enumitem}
+\setlist[itemize,enumerate]{%
+  topsep={0pt plus 0.05em},%
+  partopsep={0pt plus 0.05em},%
+  itemsep={6pt plus 0.05em minus 0.05em},%
+  parsep={0pt plus 0.05em},%
+}
+\usepackage[bookmarks,raiselinks,pageanchor,hyperindex,colorlinks,pdfencoding=auto]{hyperref}
+\usepackage{bookmark}
+\usepackage{etoolbox}
+\usepackage{xstring}
+\usepackage{tcolorbox,doc}
+\makeatletter
+\renewenvironment{theglossary}{%
+  \bgroup
+    \glossary@prologue
+    \GlossaryParms \let\item\@idxitem \ignorespaces
+}{%
+  \egroup
+}
+\makeatother
+\tcbuselibrary{documentation,breakable,minted}
+\colorlet{Option}{violet}
+\colorlet{Command}{red!75!black}
+\colorlet{Environment}{blue!75!black}
+\colorlet{Value}{olive!75!black}
+\colorlet{Color}{cyan!75!black}
+\tcbset
+  { listing engine=minted
+  , minted options=
+    { breaklines
+    , fontsize=\footnotesize
+    , linenos
+    , numbersep=20pt
+    , firstnumber=last
+    }
+  , index format=pgf
+  , color command=Command
+  , color environment=Environment
+  , color key=Option
+  , color value=Value
+  , color color=Color
+  , colbacktitle=ExampleFrame!33!ExampleBack
+  , docexample/.append style = {parskip}
+  }
+\renewcommand{\theFancyVerbLine}{\footnotesize\itshape\color{gray}\arabic{FancyVerbLine}}
+\let\tcbcs=\cs
+\renewcommand*{\cs}[1]{\textcolor{Command}{\tcbcs{#1}}}
+\def\sqbrackets#1{%
+  \texttt{\textcolor{Option}{[}#1\textcolor{Option}{]}}}
+\def\brackets#1{%
+  \texttt{\textcolor{Environment}{\char`\{}#1\textcolor{Environment}{\char`\}}}}
+\def\marg#1{%
+  \textcolor{Environment}{\ttfamily\char`\{}\meta{#1}\textcolor{Environment}{\ttfamily\char`\}}}
+\newcommand*{\env}[1]{\textcolor{Environment}{\ttfamily #1}}
+\newcommand*{\key}[1]{\textcolor{Option}{\ttfamily #1}}
+\newcommand*{\val}[1]{\textcolor{Value}{\ttfamily #1}}
+\makeatletter
+\renewenvironment{macro}[1]{%
+  \StrSubstitute{#1}{\detokenize{@}}{"@}[\MyName]%
+  \edef\saved@macroname{\expandafter\string\csname #1\endcsname}%
+  \let\saved@indexname\saved@macroname
+  \index{\MyName @\tcbIndexPrintComC {\MyName}|(emph}%
+}{%
+  \ifdef{\MyName}{}{%
+    \errmessage{You have closed a macro environment you have not opened on \the\inputlineno.}%
+  }
+  \index{\MyName @\tcbIndexPrintComC {\MyName}|)}%
+}
+\renewenvironment{environment}[1]{%
+  \StrSubstitute{#1}{\detokenize{@}}{"@}[\MyName]%
+  \edef\saved@macroname{#1}%
+  \let\saved@indexname\saved@macroname
+  \index{\MyName @\tcbIndexPrintEnvCA {\MyName}|(emph}%
+  \index{Environments!\MyName @\tcbIndexPrintEnvC {\MyName}|(emph}%
+}{%
+  \ifdef{\MyName}{}{%
+    \errmessage{You have closed an environment environment you have not opened on \the\inputlineno.}%
+  }
+  \index{Environments!\MyName @\tcbIndexPrintEnvC {\MyName}|)}%
+  \index{\MyName @\tcbIndexPrintEnvCA {\MyName}|)}%
+}
+\makeatother
+\newenvironment{optionkey}[1]{%
+  \def\MyName{#1}%
+  \index{\MyName@\tcbIndexPrintKeyCA {\MyName}|(emph}%
+  \index{Keys!\MyName@\tcbIndexPrintKeyC {\MyName}|(emph}%
+}{%
+  \ifdef{\MyName}{}{%
+    \errmessage{You have closed an optionkey environment you have not opened on \the\inputlineno.}%
+  }
+  \index{Keys!\MyName@\tcbIndexPrintKeyC {\MyName}|)}%
+  \index{\MyName@\tcbIndexPrintKeyCA {\MyName}|)}%
+}
+\newenvironment{optionvalue}[1]{%
+  \def\MyName{#1}%
+  \index{\MyName@\tcbIndexPrintValCA {\MyName}|(emph}%
+  \index{Values!\MyName@\tcbIndexPrintValC {\MyName}|(emph}%
+}{%
+  \ifdef{\MyName}{}{%
+    \errmessage{You have closed an optionvalue environment you have not opened on \the\inputlineno.}%
+  }
+  \index{Values!\MyName@\tcbIndexPrintValC {\MyName}|)}%
+  \index{\MyName@\tcbIndexPrintValCA {\MyName}|)}%
+}
+\makeatletter
+\newcommand{\resetmintedformat}{%
+  % Comments
+  \expandafter\def\csname PYGdefault@tok@c\endcsname{\let\PYGdefault@it=\textit\def\PYGdefault@tc####1{\textcolor{gray}{####1}}}
+  % Command sequences
+  \expandafter\def\csname PYGdefault@tok@k\endcsname{\def\PYGdefault@tc####1{\textcolor{Command}{####1}}}
+  % Optional arguments
+  \expandafter\def\csname PYGdefault@tok@na\endcsname{\def\PYGdefault@tc####1{\textcolor{Option}{####1}}}
+  % Braces
+  \expandafter\def\csname PYGdefault@tok@nb\endcsname{\def\PYGdefault@tc####1{\textcolor{Environment}{####1}}}
+}
+\apptocmd{\minted@checkstyle}{\resetmintedformat}{}{}
+\makeatother
+\newcommand{\pkg}[1]{\href{http://www.ctan.org/pkg/#1}{\textsf{#1}}}
+\MakeShortVerb{\|}
+\makeatletter
+\let\PrintMacroName\@gobble
+\let\PrintEnvName\@gobble
+\renewenvironment{tcb@manual@entry}{\begin{list}{}{%
+  \setlength{\topsep}{0pt}
+  \setlength{\partopsep}{0pt}
+  \setlength{\leftmargin}{\kvtcb@doc@left}%
+  \setlength{\itemindent}{0pt}%
+  \setlength{\itemsep}{0pt}%
+  \setlength{\parsep}{0pt}%
+  \setlength{\rightmargin}{\kvtcb@doc@right}%
+  }\item}{\end{list}}
+\makeatother
+% This bit inspired by ydoc
+\makeatletter
+\newwrite\ydocwrite
+\def\ydocfname{\jobname.tcbtemp}
+\def\ydoc@catcodes{%
+  \let\do\@makeother
+  \dospecials
+  \catcode`\\=\active
+  \catcode`\^^M=\active
+  \catcode`\ =\active
+}
+\def\macrocode{%
+  \begingroup
+  \ydoc@catcodes
+  \macro@code
+}
+\def\endmacrocode{}
+\begingroup
+\endlinechar\m@ne
+\@firstofone{%
+\catcode`\|=0\relax
+\catcode`\(=1\relax
+\catcode`\)=2\relax
+\catcode`\*=14\relax
+\catcode`\{=12\relax
+\catcode`\}=12\relax
+\catcode`\ =12\relax
+\catcode`\%=12\relax
+\catcode`\\=\active
+\catcode`\^^M=\active
+\catcode`\ =\active
+}*
+|gdef|macro@code#1^^M%    \end{macrocode}(*
+|endgroup|expandafter|macro@@code|expandafter(|ydoc@removeline#1|noexpand|lastlinemacro)*
+)*
+|gdef|ydoc@removeline#1^^M(|noexpand|firstlinemacro)*
+|gdef|ydoc@defspecialmacros(*
+|def^^M(|noexpand|newlinemacro)*
+|def (|noexpand|spacemacro)*
+|def\(|noexpand|bslashmacro)*
+)*
+|gdef|ydoc@defrevspecialmacros(*
+|def|newlinemacro(|noexpand^^M)*
+|def|spacemacro(|noexpand )*
+|def|bslashmacro(|noexpand\)*
+)*
+|endgroup
+\def\macro@@code#1{%
+  {\ydoc@defspecialmacros
+  \xdef\themacrocode{#1}}%
+  \PrintMacroCode
+  \end{macrocode}%
+}
+\def\PrintMacroCode{%
+  \begingroup
+  \let\firstlinemacro\empty
+  \let\lastlinemacro\empty
+  \def\newlinemacro{^^J}%
+  \let\bslashmacro\bslash
+  \let\spacemacro\space
+  \immediate\openout\ydocwrite=\ydocfname\relax
+  \immediate\write\ydocwrite{\themacrocode}%
+  \immediate\closeout\ydocwrite
+  \let\input\@input
+  \tcbinputlisting{breakable,listing only,docexample,listing file=\ydocfname}%
+  \endgroup
+}
+\makeatother
+
+\setlength{\fboxsep}{0pt}
+
+\usepackage{yarecipe}
+
+\EnableCrossrefs
+\CodelineIndex
+\RecordChanges
+\begin{document}
+
+\GetFileInfo{\jobname.dtx}
+\DoNotIndex{\newcommand,\newenvironment}
+
+\title{\textsf{yarecipe} --- Yet another package for typesetting
+  recipes\thanks{This file describes version \fileversion,
+  last revised \filedate.}
+}
+\author{Alex Ball\thanks{E-mail: ab318@bath.ac.uk}}
+\date{Released \filedate}
+
+\maketitle
+
+\changes{v0.1}{2019/02/19}{First public release}
+
+\begin{abstract}
+This is yet another package for typesetting recipes in the German style, with the ingredients list set in parallel with the method, so each item appears where it is first used in the recipe.
+\end{abstract}
+
+\section{Introduction}
+
+Technically, each method step is a single-line paragraph.
+On the line are three boxes: an ingredients box, a step number box, and a method box. The method box is a regular paragraph box. The step number box is a horizontal box. The ingredients box contains a sequence of hanging paragraphs.
+
+The idea is to have the size of these boxes change dynamically:
+
+\begin{itemize}
+\item First column:
+\begin{itemize}
+\item The hanging indent is the width of largest ingredient quantity.
+\item The whole column is
+\begin{itemize}
+\item at least as wide as the hanging indent;
+\item at least as wide as a user-specified minimum width;
+\item at most as wide as a user-specified maximum width;
+\item otherwise as wide as the widest ingredient (\#2 if there is
+  no \#1, or hanging indent plus \#2 if there is a \#1).
+\end{itemize}
+\end{itemize}
+\item Middle column: as wide as the widest step number plus 1em.
+\item Right column: the remaining line width.
+\end{itemize}
+
+Eventually it will be possible to define sections which are sized
+independently. For each section we will need to write three widths
+to the aux file: widest quantity, widest ingredient, widest step.
+
+In the following recipe,
+
+\begin{itemize}
+\item the widest quantity is \the\YARwidestquantitylast;
+\item the widest ingredient is \the\YARwidestingredlast;
+\item the widest step is \the\YARwideststeplast;
+\end{itemize}
+
+\begin{testrecipe}{Mug cake}[Makes one cake]
+\begin{YARIngBox}
+\YARing[4]{tbsp self-raising flour}
+\YARing[4]{tbsp caster sugar}
+\YARing[2]{tbsp cocoa powder}
+\end{YARIngBox}%
+\begin{YARMethodBox}
+Add 4 tbsp self-raising flour, 4 tbsp caster sugar and 2 tbsp cocoa powder to the largest mug you have (to stop it overflowing in the microwave) and mix.
+\end{YARMethodBox}
+\begin{YARIngBox}
+\YARing[1]{medium egg}
+\end{YARIngBox}%
+\begin{YARMethodBox}
+Add 1 medium egg and mix in as much as you can, but don't worry if there's still dry mix left.
+\end{YARMethodBox}
+\begin{YARIngBox}
+\YARing[3]{tbsp milk}
+\YARing[3]{tbsp vegetable\slash sunflower oil}
+\YARing{a few drops of vanilla essence (or orange or peppermint)}
+\YARing[2]{tbsp chocolate chips, nuts, or raisins etc (optional)}
+\end{YARIngBox}%
+\begin{YARMethodBox}
+Add the 3 tbsp milk, 3 tbsp vegetable or sunflower oil and a few drops of vanilla essence and mix until smooth, before adding 2 tbsp chocolate chips, nuts, or raisins, if using, and mix again.
+\end{YARMethodBox}%
+\begin{YARIngBox}
+\end{YARIngBox}%
+\begin{YARMethodBox}
+Centre your mug in the middle of the microwave oven and cook on High for 1½ -2 mins, or until it has stopped rising and is firm to the touch.
+\end{YARMethodBox}
+\end{testrecipe}
+
+\StopEventually{%
+% \clearpage
+% \PrintChanges
+% \PrintIndex
+}
+
+%\clearpage
+
+\section{Implementation}
+
+\setcounter{FancyVerbLine}{20}%
+\DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \iffalse %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%<*sty>
+% \fi %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% \subsection{Dependencies}
+%
+%    \begin{macrocode}
+\RequirePackage{etoolbox}
+\RequirePackage{xparse}
+\RequirePackage{hanging}
+\RequirePackage{adjustbox}
+
+\newlength{\YARminingredientwidth}
+\newlength{\YARmaxingredientwidth}
+\setlength{\YARmaxingredientwidth}{.4\textwidth}
+
+\newlength{\YARwidestquantity}
+\newlength{\YARwidestquantitylast}
+\setlength{\YARwidestquantitylast}{1em}
+\newlength{\YARwidestingred}
+\newlength{\YARwidestingredlast}
+\setlength{\YARwidestingredlast}{10em}
+\newlength{\YARwideststep}
+\newlength{\YARwideststeplast}
+\setlength{\YARwideststeplast}{2em}
+\newlength{\YARtempdim}
+
+\newcommand{\ingrfont}{\normalfont}
+\newcommand{\methodfont}{\normalfont}
+\newcommand{\stepnofont}{\normalfont\itshape}
+
+\newcounter{YARstep}
+\NewDocumentEnvironment{testrecipe}{mo}{%
+\textbf{#1}\hfill\emph{#2}\\
+\rule[0.5em]{\linewidth}{0.4pt}\par\nopagebreak
+\setlength{\parindent}{0pt}%
+\setlength{\parskip}{0.5em plus 0.2em minus 0.1em}%
+\setcounter{YARstep}{0}
+}{%
+}
+
+\newlength{\ingdentwidth}
+\newlength{\ingcolwidth}
+\newlength{\stepcolwidth}
+\newlength{\methodcolwidth}
+
+\AtBeginDocument{%
+  \setlength{\ingdentwidth}{\YARwidestquantitylast}%
+  \wlog{\string\YARwidestquantitylast\space is \the\YARwidestquantitylast}%
+  \wlog{\string\ingdentwidth\space is \the\ingdentwidth}%
+  \setlength{\ingcolwidth}{\ingdentwidth}%
+  \ifdimcomp{\ingcolwidth}{<}{\YARminingredientwidth}{%
+    \setlength{\ingcolwidth}{\YARminingredientwidth}}{}%
+  \ifdimcomp{\ingcolwidth}{<}{\YARwidestingredlast}{%
+    \setlength{\ingcolwidth}{\YARwidestingredlast}}{}%
+  \ifdimcomp{\ingcolwidth}{>}{\YARmaxingredientwidth}{%
+    \setlength{\ingcolwidth}{\YARmaxingredientwidth}}{}%
+  \wlog{\string\YARwidestingredlast\space is \the\YARwidestingredlast}%
+  \wlog{\string\ingcolwidth\space is \the\ingcolwidth}%
+  \deflength{\stepcolwidth}{\YARwideststeplast + 1em}%
+  \wlog{\string\YARwideststeplast\space is \the\YARwideststeplast}%
+  \wlog{\string\stepcolwidth\space is \the\stepcolwidth}%
+}
+
+\NewDocumentEnvironment{YARIngBox}{}{%
+\begin{minipage}[t]{\ingcolwidth}%
+\raggedright
+}{%
+\strut
+\end{minipage}%
+}
+
+\NewDocumentEnvironment{YARMethodBox}{}{%
+\deflength{\methodcolwidth}{\linewidth-\ingcolwidth-\stepcolwidth}%
+\stepcounter{YARstep}%
+\adjustbox{gstore width=\YARtempdim,discard}{\stepnofont\theYARstep.\space}%
+\ifdimcomp{\YARtempdim}{>}{\YARwideststep}{%
+  \global\deflength{\YARwideststep}{\YARtempdim}}{}%
+\makebox[\stepcolwidth][r]{\stepnofont\theYARstep.\space}%
+\begin{minipage}[t]{\methodcolwidth}%
+\methodfont
+}{%
+\strut
+\end{minipage}\par
+}
+
+\NewDocumentCommand\YARing{om}{%
+  \IfValueT{#1}{\adjustbox{gstore width=\YARtempdim,discard}{\ingrfont#1\space}%
+  \ifdimcomp{\YARtempdim}{>}{\YARwidestquantity}{%
+    \global\deflength{\YARwidestquantity}{\YARtempdim}}{}}%
+  \adjustbox{gstore width=\YARtempdim,discard}{\ingrfont#2}%
+  \IfValueT{#1}{\addtolength{\YARtempdim}{\ingdentwidth}}%
+  \ifdimcomp{\YARtempdim}{>}{\YARwidestingred}{%
+    \global\deflength{\YARwidestingred}{\YARtempdim}}{}%
+  \par\ingrfont\hangpara{\ingdentwidth}{1}%
+  \IfValueT{#1}{\makebox[\ingdentwidth][r]{#1\space}}#2%
+}
+\newcommand{\newstep}{}
+
+\AtEndDocument{%
+  \newtoggle{YARrerun}
+  \ifdimcomp{\YARwidestquantity}{=}{\YARwidestquantitylast}{}{%
+    \toggletrue{YARrerun}}
+  \ifdimcomp{\YARwidestingred}{=}{\YARwidestingredlast}{}{%
+    \toggletrue{YARrerun}}
+  \ifdimcomp{\YARwideststep}{=}{\YARwideststeplast}{}{%
+    \toggletrue{YARrerun}}
+  \iftoggle{YARrerun}{%
+   \@latex@warning@no@line{Rerun to correct yarecipe widths}%
+  }
+  \immediate\write\@auxout{%
+    \string\expandafter\string\global\string\expandafter\string\deflength\string\csname\space
+    YARwidestquantitylast\string\endcsname{%
+      \the\csname YARwidestquantity\endcsname
+    }%
+    ^^J%
+    \string\expandafter\string\global\string\expandafter\string\deflength\string\csname\space
+    YARwidestingredlast\string\endcsname{%
+      \the\csname YARwidestingred\endcsname
+    }%
+    ^^J%
+    \string\expandafter\string\global\string\expandafter\string\deflength\string\csname\space
+    YARwideststeplast\string\endcsname{%
+      \the\csname YARwideststep\endcsname
+    }%
+    \string\wlog{SETTING LENGTHS FROM PREVIOUS RUN...}
+  }%
+}
+
+%    \end{macrocode}
+%
+%
+%
+% \iffalse %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%</sty>
+% \fi %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\Finale

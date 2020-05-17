@@ -385,36 +385,23 @@ In the following recipe,
 \item the widest step is \the\YARwideststeplast;
 \end{itemize}
 
-\begin{testrecipe}{Mug cake}[Makes one cake]
-\begin{YARIngBox}
-\YARing[4]{tbsp self-raising flour}
-\YARing[4]{tbsp caster sugar}
-\YARing[2]{tbsp cocoa powder}
-\end{YARIngBox}%
-\begin{YARMethodBox}
+\renewcommand{\methodfont}{\raggedright\normalfont}
+
+\begin{recipe}{Mug cake}[Makes one cake]
+\ing[4]{tbsp self-raising flour}
+\ing[4]{tbsp caster sugar}
+\ing[2]{tbsp cocoa powder}
 Add 4 tbsp self-raising flour, 4 tbsp caster sugar and 2 tbsp cocoa powder to the largest mug you have (to stop it overflowing in the microwave) and mix.
-\end{YARMethodBox}
-\begin{YARIngBox}
-\YARing[1]{medium egg}
-\end{YARIngBox}%
-\begin{YARMethodBox}
+\ing[1]{medium egg}
 Add 1 medium egg and mix in as much as you can, but don't worry if there's still dry mix left.
-\end{YARMethodBox}
-\begin{YARIngBox}
-\YARing[3]{tbsp milk}
-\YARing[3]{tbsp vegetable\slash sunflower oil}
-\YARing{a few drops of vanilla essence (or orange or peppermint)}
-\YARing[2]{tbsp chocolate chips, nuts, or raisins etc (optional)}
-\end{YARIngBox}%
-\begin{YARMethodBox}
+\ing[3]{tbsp milk}
+\ing[3]{tbsp vegetable\slash sunflower oil}
+\ing{a few drops of vanilla essence (or orange or peppermint)}
+\ing[10]{tbsp chocolate chips, nuts, or raisins, etc.\@ (optional)}
 Add the 3 tbsp milk, 3 tbsp vegetable or sunflower oil and a few drops of vanilla essence and mix until smooth, before adding 2 tbsp chocolate chips, nuts, or raisins, if using, and mix again.
-\end{YARMethodBox}%
-\begin{YARIngBox}
-\end{YARIngBox}%
-\begin{YARMethodBox}
-Centre your mug in the middle of the microwave oven and cook on High for 1½ -2 mins, or until it has stopped rising and is firm to the touch.
-\end{YARMethodBox}
-\end{testrecipe}
+\newstep
+Centre your mug in the middle of the microwave oven and cook on High for 1½--2 mins, or until it has stopped rising and is firm to the touch.
+\end{recipe}
 
 \StopEventually{%
 % \clearpage
@@ -438,16 +425,60 @@ Centre your mug in the middle of the microwave oven and cook on High for 1½ -2 
 %
 % \subsection{Dependencies}
 %
+% We use tests from \pkg{etoolbox}, define macros with \pkg{xparse}, hang
+% paragraphs with \pkg{hanging}, and (extravagantly) measure text with
+% \pkg{adjustbox}.
+%
 %    \begin{macrocode}
 \RequirePackage{etoolbox}
 \RequirePackage{xparse}
 \RequirePackage{hanging}
 \RequirePackage{adjustbox}
-
-\newlength{\YARminingredientwidth}
-\newlength{\YARmaxingredientwidth}
-\setlength{\YARmaxingredientwidth}{.4\textwidth}
-
+%    \end{macrocode}
+%
+% \subsection{Fonts}
+%
+% We provide hooks that set the fonts used in the ingredient column, step
+% number colum, and method column respectively.
+%
+%    \begin{macrocode}
+\newcommand{\ingrfont}{\normalfont}
+\newcommand{\stepnofont}{\normalfont\itshape}
+\newcommand{\methodfont}{\normalfont}
+%    \end{macrocode}
+%
+% \subsection{Lengths}
+%
+% Within each recipe, we parameterize the layout with these four lengths:
+% \begin{itemize}
+% \item\cs{ingdentwidth} is the size of the hanging indent in the ingredient
+%   column;
+% \item\cs{ingcolwidth} is the width of the ingredient column;
+% \item\cs{stepcolwidth} is the width of the step number column;
+% \item\cs{methodcolwidth} is the width of the method column.
+% \end{itemize}
+%
+%    \begin{macrocode}
+\newlength{\ingdentwidth}
+\newlength{\ingcolwidth}
+\newlength{\stepcolwidth}
+\newlength{\methodcolwidth}
+%    \end{macrocode}
+%
+% For each recipe section, we need six lengths to track three critical widths
+% -- the widest numeric quantity, the widest ingredient, and the widest step
+% number -- from both the current and previous runs.
+%
+% The values from the previous run are used to calculate the four widths needed
+% to set a recipe. To prevent the page breaks being way off on the first run,
+% we set some sensible defaults for these. On subsequent runs, these values are
+% overridden at the end of the preamble by the values saved to the aux file
+% from the previous run.
+%
+% The values from the current run are checked at the end to see if
+% another run is needed.
+%
+%    \begin{macrocode}
 \newlength{\YARwidestquantity}
 \newlength{\YARwidestquantitylast}
 \setlength{\YARwidestquantitylast}{1em}
@@ -458,26 +489,31 @@ Centre your mug in the middle of the microwave oven and cook on High for 1½ -2 
 \newlength{\YARwideststeplast}
 \setlength{\YARwideststeplast}{2em}
 \newlength{\YARtempdim}
-
-\newcommand{\ingrfont}{\normalfont}
-\newcommand{\methodfont}{\normalfont}
-\newcommand{\stepnofont}{\normalfont\itshape}
-
+%    \end{macrocode}
+%
+% We provide widths that set limits on how wide or narrow the ingredient
+% column can go. The length \cs{YARmaxingredientwidth} is an absolute maximum,
+% and defaults to 40\% of the text width at the point the package is loaded.
+% The length \cs{YARminingredientwidth} sets the minimum, but will be ignored
+% if the \cs{YARmaxingredientwidth} is smaller or the widest numeric quantity
+% is larger.
+%
+%    \begin{macrocode}
+\newlength{\YARminingredientwidth}
+\newlength{\YARmaxingredientwidth}
+\setlength{\YARmaxingredientwidth}{.4\textwidth}
+%    \end{macrocode}
+%
+% \subsection{Counters}
+%
+% We need counters for the steps within a recipe and the recipe sections in the
+% document.
+%
+%    \begin{macrocode}
 \newcounter{YARstep}
-\NewDocumentEnvironment{testrecipe}{mo}{%
-\textbf{#1}\hfill\emph{#2}\\
-\rule[0.5em]{\linewidth}{0.4pt}\par\nopagebreak
-\setlength{\parindent}{0pt}%
-\setlength{\parskip}{0.5em plus 0.2em minus 0.1em}%
-\setcounter{YARstep}{0}
-}{%
-}
-
-\newlength{\ingdentwidth}
-\newlength{\ingcolwidth}
-\newlength{\stepcolwidth}
-\newlength{\methodcolwidth}
-
+%    \end{macrocode}
+%
+%    \begin{macrocode}
 \AtBeginDocument{%
   \setlength{\ingdentwidth}{\YARwidestquantitylast}%
   \wlog{\string\YARwidestquantitylast\space is \the\YARwidestquantitylast}%
@@ -495,7 +531,9 @@ Centre your mug in the middle of the microwave oven and cook on High for 1½ -2 
   \wlog{\string\YARwideststeplast\space is \the\YARwideststeplast}%
   \wlog{\string\stepcolwidth\space is \the\stepcolwidth}%
 }
-
+%    \end{macrocode}
+%
+%    \begin{macrocode}
 \NewDocumentEnvironment{YARIngBox}{}{%
 \begin{minipage}[t]{\ingcolwidth}%
 \raggedright
@@ -503,22 +541,28 @@ Centre your mug in the middle of the microwave oven and cook on High for 1½ -2 
 \strut
 \end{minipage}%
 }
-
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\newtoggle{inYARMethodBox}
 \NewDocumentEnvironment{YARMethodBox}{}{%
-\deflength{\methodcolwidth}{\linewidth-\ingcolwidth-\stepcolwidth}%
 \stepcounter{YARstep}%
 \adjustbox{gstore width=\YARtempdim,discard}{\stepnofont\theYARstep.\space}%
 \ifdimcomp{\YARtempdim}{>}{\YARwideststep}{%
   \global\deflength{\YARwideststep}{\YARtempdim}}{}%
 \makebox[\stepcolwidth][r]{\stepnofont\theYARstep.\space}%
+\toggletrue{inYARMethodBox}%
 \begin{minipage}[t]{\methodcolwidth}%
 \methodfont
 }{%
 \strut
 \end{minipage}\par
+\togglefalse{inYARMethodBox}%
 }
-
-\NewDocumentCommand\YARing{om}{%
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\NewDocumentCommand\YARIng{om}{%
   \IfValueT{#1}{\adjustbox{gstore width=\YARtempdim,discard}{\ingrfont#1\space}%
   \ifdimcomp{\YARtempdim}{>}{\YARwidestquantity}{%
     \global\deflength{\YARwidestquantity}{\YARtempdim}}{}}%
@@ -529,8 +573,60 @@ Centre your mug in the middle of the microwave oven and cook on High for 1½ -2 
   \par\ingrfont\hangpara{\ingdentwidth}{1}%
   \IfValueT{#1}{\makebox[\ingdentwidth][r]{#1\space}}#2%
 }
-\newcommand{\newstep}{}
-
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\NewDocumentEnvironment{YARecipe}{mo}{%
+\textbf{#1}\hfill\emph{#2}\\
+\rule[0.5em]{\linewidth}{0.4pt}\par\nopagebreak
+\setlength{\parindent}{0pt}%
+\setlength{\parskip}{0.5em plus 0.2em minus 0.1em}%
+\setcounter{YARstep}{0}%
+\deflength{\methodcolwidth}{\linewidth-\ingcolwidth-\stepcolwidth}%
+}{%
+}
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\def\YARchecknext#1{%
+  \let\YAR@test#1
+  \ifdefequal{\YAR@test}{\ing}{%
+    \wlog{DEBUG: New ingredient found!}%
+  }{%
+    \wlog{DEBUG: No new ingredient found!}\end{YARIngBox}\begin{YARMethodBox}%
+  }#1%
+}
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\NewDocumentEnvironment{recipe}{mo}{%
+  \IfValueTF{#2}{\begin{YARecipe}{#1}[#2]}{\begin{YARecipe}{#1}}%
+  \begin{YARIngBox}%
+  \YARchecknext
+}{%
+  \end{YARMethodBox}%
+  \end{YARecipe}%
+}
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\NewDocumentCommand\ing{om}{%
+  \iftoggle{inYARMethodBox}{\end{YARMethodBox}\begin{YARIngBox}}{}%
+  \IfValueTF{#1}{\YARIng[#1]{#2}}{\YARIng{#2}}%
+  \YARchecknext
+}
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\newcommand{\newstep}{%
+  \end{YARMethodBox}%
+  \begin{YARIngBox}%
+  \end{YARIngBox}%
+  \begin{YARMethodBox}%
+}
+%    \end{macrocode}
+%
+%    \begin{macrocode}
 \AtEndDocument{%
   \newtoggle{YARrerun}
   \ifdimcomp{\YARwidestquantity}{=}{\YARwidestquantitylast}{}{%
@@ -543,24 +639,22 @@ Centre your mug in the middle of the microwave oven and cook on High for 1½ -2 
    \@latex@warning@no@line{Rerun to correct yarecipe widths}%
   }
   \immediate\write\@auxout{%
-    \string\expandafter\string\global\string\expandafter\string\deflength\string\csname\space
-    YARwidestquantitylast\string\endcsname{%
+    \string\expandafter\string\global\string\expandafter\string\deflength
+    \string\csname\space YARwidestquantitylast\string\endcsname{%
       \the\csname YARwidestquantity\endcsname
     }%
     ^^J%
-    \string\expandafter\string\global\string\expandafter\string\deflength\string\csname\space
-    YARwidestingredlast\string\endcsname{%
+    \string\expandafter\string\global\string\expandafter\string\deflength
+    \string\csname\space YARwidestingredlast\string\endcsname{%
       \the\csname YARwidestingred\endcsname
     }%
     ^^J%
-    \string\expandafter\string\global\string\expandafter\string\deflength\string\csname\space
-    YARwideststeplast\string\endcsname{%
+    \string\expandafter\string\global\string\expandafter\string\deflength
+    \string\csname\space YARwideststeplast\string\endcsname{%
       \the\csname YARwideststep\endcsname
     }%
-    \string\wlog{SETTING LENGTHS FROM PREVIOUS RUN...}
   }%
 }
-
 %    \end{macrocode}
 %
 %

@@ -377,15 +377,9 @@ Eventually it will be possible to define sections which are sized
 independently. For each section we will need to write three widths
 to the aux file: widest quantity, widest ingredient, widest step.
 
-In the following recipe,
+\renewcommand{\yarmethodfont}{\raggedright\normalfont}
 
-\begin{itemize}
-\item the widest quantity is \the\YARwidestquantitylast;
-\item the widest ingredient is \the\YARwidestingredlast;
-\item the widest step is \the\YARwideststeplast;
-\end{itemize}
-
-\renewcommand{\methodfont}{\raggedright\normalfont}
+\section{Examples}
 
 \begin{recipe}{Mug cake}[Makes one cake]
 \ing[4]{tbsp self-raising flour}
@@ -403,13 +397,30 @@ Add the 3 tbsp milk, 3 tbsp vegetable or sunflower oil and a few drops of vanill
 Centre your mug in the middle of the microwave oven and cook on High for 1½--2 mins, or until it has stopped rising and is firm to the touch.
 \end{recipe}
 
+The recipes above and below use the same widths.
+
+\begin{recipe}{Pizza dough}[Serves two hungry people]
+\ing[200]{$\!$g self-raising flour}
+\ing[200]{$\!$g Greek yoghurt}
+Mix with a fork and then by hand until a dough is formed.
+\end{recipe}
+
+\yarsection
+But if we start a new recipe section here, you can see the geometry changes:
+
+\begin{recipe}{Pizza dough}[Serves two hungry people]
+\ing[200]{$\!$g self-raising flour}
+\ing[200]{$\!$g Greek yoghurt}
+Mix with a fork and then by hand until a dough is formed.
+\end{recipe}
+
 \StopEventually{%
-% \clearpage
-% \PrintChanges
-% \PrintIndex
+\clearpage
+\PrintChanges
+\PrintIndex
 }
 
-%\clearpage
+\clearpage
 
 \section{Implementation}
 
@@ -436,106 +447,204 @@ Centre your mug in the middle of the microwave oven and cook on High for 1½--2 
 \RequirePackage{adjustbox}
 %    \end{macrocode}
 %
-% \subsection{Fonts}
+% \subsection{Customization hooks}
 %
 % We provide hooks that set the fonts used in the ingredient column, step
 % number colum, and method column respectively.
 %
 %    \begin{macrocode}
-\newcommand{\ingrfont}{\normalfont}
-\newcommand{\stepnofont}{\normalfont\itshape}
-\newcommand{\methodfont}{\normalfont}
-%    \end{macrocode}
-%
-% \subsection{Lengths}
-%
-% Within each recipe, we parameterize the layout with these four lengths:
-% \begin{itemize}
-% \item\cs{ingdentwidth} is the size of the hanging indent in the ingredient
-%   column;
-% \item\cs{ingcolwidth} is the width of the ingredient column;
-% \item\cs{stepcolwidth} is the width of the step number column;
-% \item\cs{methodcolwidth} is the width of the method column.
-% \end{itemize}
-%
-%    \begin{macrocode}
-\newlength{\ingdentwidth}
-\newlength{\ingcolwidth}
-\newlength{\stepcolwidth}
-\newlength{\methodcolwidth}
-%    \end{macrocode}
-%
-% For each recipe section, we need six lengths to track three critical widths
-% -- the widest numeric quantity, the widest ingredient, and the widest step
-% number -- from both the current and previous runs.
-%
-% The values from the previous run are used to calculate the four widths needed
-% to set a recipe. To prevent the page breaks being way off on the first run,
-% we set some sensible defaults for these. On subsequent runs, these values are
-% overridden at the end of the preamble by the values saved to the aux file
-% from the previous run.
-%
-% The values from the current run are checked at the end to see if
-% another run is needed.
-%
-%    \begin{macrocode}
-\newlength{\YARwidestquantity}
-\newlength{\YARwidestquantitylast}
-\setlength{\YARwidestquantitylast}{1em}
-\newlength{\YARwidestingred}
-\newlength{\YARwidestingredlast}
-\setlength{\YARwidestingredlast}{10em}
-\newlength{\YARwideststep}
-\newlength{\YARwideststeplast}
-\setlength{\YARwideststeplast}{2em}
-\newlength{\YARtempdim}
+\newcommand{\yaringredientfont}{\normalfont}
+\newcommand{\yarstepnumfont}{\normalfont\itshape}
+\newcommand{\yarmethodfont}{\normalfont}
 %    \end{macrocode}
 %
 % We provide widths that set limits on how wide or narrow the ingredient
-% column can go. The length \cs{YARmaxingredientwidth} is an absolute maximum,
+% column can go. The length \cs{yaringredientwidthmax} is an absolute maximum,
 % and defaults to 40\% of the text width at the point the package is loaded.
-% The length \cs{YARminingredientwidth} sets the minimum, but will be ignored
-% if the \cs{YARmaxingredientwidth} is smaller or the widest numeric quantity
+% The length \cs{yaringredientwidthmin} sets the minimum, but will be ignored
+% if the \cs{yaringredientwidthmax} is smaller or the widest numeric quantity
 % is larger.
 %
 %    \begin{macrocode}
-\newlength{\YARminingredientwidth}
-\newlength{\YARmaxingredientwidth}
-\setlength{\YARmaxingredientwidth}{.4\textwidth}
+\newlength{\yaringredientwidthmin}
+\newlength{\yaringredientwidthmax}
+\setlength{\yaringredientwidthmax}{.4\textwidth}
 %    \end{macrocode}
 %
-% \subsection{Counters}
+% \subsection{Recipe sections}
 %
-% We need counters for the steps within a recipe and the recipe sections in the
-% document.
+% To ensure a consistent appearance down the page, consecutive recipes have the
+% same geometry, but it we introduce the idea of a recipe section so that not
+% all recipes in the document have to have exactly the same geometry.
 %
 %    \begin{macrocode}
-\newcounter{YARstep}
+\newcounter{YARsection}
 %    \end{macrocode}
 %
+% Within each recipe, we parameterize the geometry with these four lengths,
+% where |-n-| is the number of the recipe section:
+% \begin{itemize}
+% \item\cs{YAR-n-IngDentWidth} is the size of the hanging indent in the
+%   ingredient column;
+% \item\cs{YAR-n-IngColWidth} is the width of the ingredient column;
+% \item\cs{YAR-n-StepColWidth} is the width of the step number column;
+% \item\cs{YARMethodColWidth} is the width of the method column.
+% \end{itemize}
+%
+% In due course, the section-specific widths are calculated are based on the
+% width of column content. In order to keep track of column content, we need
+% three more lengths:
+%
+% \begin{itemize}
+% \item\cs{YARWidestIngDent} is the width of the widest numerical quantity
+%   (the optional argument of \cs{ing} plus a space) in the section;
+% \item\cs{YARWidestIngredient} is the width of the widest ingredient (the
+%   mandatory argument of \cs{ing}) in the section.
+% \item\cs{YARWidestStepNum} is the width of the widest step number (plus a dot
+%   and space) in the section.
+% \end{itemize}
+%
+% \cs{YARMethodColWidth} is calculated at the start of each recipe to take up
+% the remaining space on the line.
+%
 %    \begin{macrocode}
-\AtBeginDocument{%
-  \setlength{\ingdentwidth}{\YARwidestquantitylast}%
-  \wlog{\string\YARwidestquantitylast\space is \the\YARwidestquantitylast}%
-  \wlog{\string\ingdentwidth\space is \the\ingdentwidth}%
-  \setlength{\ingcolwidth}{\ingdentwidth}%
-  \ifdimcomp{\ingcolwidth}{<}{\YARminingredientwidth}{%
-    \setlength{\ingcolwidth}{\YARminingredientwidth}}{}%
-  \ifdimcomp{\ingcolwidth}{<}{\YARwidestingredlast}{%
-    \setlength{\ingcolwidth}{\YARwidestingredlast}}{}%
-  \ifdimcomp{\ingcolwidth}{>}{\YARmaxingredientwidth}{%
-    \setlength{\ingcolwidth}{\YARmaxingredientwidth}}{}%
-  \wlog{\string\YARwidestingredlast\space is \the\YARwidestingredlast}%
-  \wlog{\string\ingcolwidth\space is \the\ingcolwidth}%
-  \deflength{\stepcolwidth}{\YARwideststeplast + 1em}%
-  \wlog{\string\YARwideststeplast\space is \the\YARwideststeplast}%
-  \wlog{\string\stepcolwidth\space is \the\stepcolwidth}%
+\newlength{\YARWidestIngDent}
+\newlength{\YARWidestIngredient}
+\newlength{\YARWidestStepNum}
+\newlength{\YARMethodColWidth}
+%    \end{macrocode}
+%
+% We need another length, \cs{YARtempdim}, to help with calculations:
+%
+%    \begin{macrocode}
+\newlength{\YARtempdim}
+%    \end{macrocode}
+%
+% At the end of each section, the widths the section should have had are
+% calculated and saved to the aux file. If these are different from what the
+% section \emph{actually} had, we set a toggle, |YARrerun|, to true.
+%
+%    \begin{macrocode}
+\newtoggle{YARrerun}
+%    \end{macrocode}
+%
+% Note that, since the aux file is read twice, we don't know if the lengths in
+% question have been initialized at the point it is read. We therefore have to
+% test for this before performing the initialization.
+%
+%    \begin{macrocode}
+\def\YARCaclulateWidths{%
+%    \end{macrocode}
+%
+% \cs{YAR-n-IngDentWidth} is set to the \cs{YARWidestIngDent}.
+%
+%    \begin{macrocode}
+  \ifdimequal{\csname YAR\theYARsection IngDentWidth\endcsname}%
+    {\YARWidestIngDent}{}{\global\toggletrue{YARrerun}}%
+  \immediate\write\@auxout{%
+    \string\ifcslength{YAR\theYARsection IngDentWidth}{}{%
+    \string\expandafter\string\newlength\string\csname\space YAR\theYARsection IngDentWidth\string\endcsname}^^J
+    \string\expandafter\string\global\string\expandafter\string\deflength
+    \string\csname\space YAR\theYARsection IngDentWidth\string\endcsname{%
+      \the\YARWidestIngDent
+    }}%
+%    \end{macrocode}
+%
+% \cs{YAR-n-IngColWidth} is set to whichever is the narrowest of
+% \cs{yaringredientwidthmax} and [the widest of (\cs{YARWidestIngDent} $+$
+% \cs{YARWidestIngredient}) and \cs{yaringredientwidthmin}].
+%
+%    \begin{macrocode}
+  \deflength{\YARtempdim}{\YARWidestIngDent + \YARWidestIngredient}%
+  \ifdimcomp{\YARtempdim}{<}{\yaringredientwidthmin}{%
+    \deflength{\YARtempdim}{\yaringredientwidthmin}}{}%
+  \ifdimcomp{\YARtempdim}{>}{\yaringredientwidthmax}{%
+    \deflength{\YARtempdim}{\yaringredientwidthmax}}{}%
+  \ifdimequal{\csname YAR\theYARsection IngColWidth\endcsname}%
+    {\YARtempdim}{}{\global\toggletrue{YARrerun}}%
+  \immediate\write\@auxout{%
+    \string\ifcslength{YAR\theYARsection IngColWidth}{}{%
+    \string\expandafter\string\newlength\string\csname\space YAR\theYARsection IngColWidth\string\endcsname}^^J
+    \string\expandafter\string\global\string\expandafter\string\deflength
+    \string\csname\space YAR\theYARsection IngColWidth\string\endcsname{%
+      \the\YARtempdim
+    }}%
+%    \end{macrocode}
+%
+% \cs{YAR-n-StepColWidth} is set to \cs{YARWidestStepNum} plus a hard-coded
+% 1em margin. (This could be made configurable.)
+%
+%    \begin{macrocode}
+  \deflength{\YARtempdim}{\YARWidestStepNum + 1em}%
+  \ifdimequal{\csname YAR\theYARsection StepColWidth\endcsname}%
+    {\YARtempdim}{}{\global\toggletrue{YARrerun}}%
+  \immediate\write\@auxout{%
+    \string\ifcslength{YAR\theYARsection StepColWidth}{}{%
+    \string\expandafter\string\newlength\string\csname\space YAR\theYARsection StepColWidth\string\endcsname}^^J
+    \string\expandafter\string\global\string\expandafter\string\deflength
+    \string\csname\space YAR\theYARsection StepColWidth\string\endcsname{%
+      \the\YARtempdim
+    }}%
 }
 %    \end{macrocode}
 %
+% When we start a new section, we increment the section counter. If the widths
+% for this section have not been initialized by the aux file, we initialize them
+% with some reasonable values. We also need to reset the widest widths back
+% to zero.
+%
+%    \begin{macrocode}
+\NewDocumentCommand\YARStartNewSection{}{%
+  \stepcounter{YARsection}%
+  \ifcslength{YAR\theYARsection IngDentWidth}{}{%
+    \expandafter\newlength\csname YAR\theYARsection IngDentWidth\endcsname
+    \expandafter\global\expandafter\deflength\csname YAR\theYARsection IngDentWidth\endcsname{1em}}%
+  \ifcslength{YAR\theYARsection IngColWidth}{}{%
+    \expandafter\newlength\csname YAR\theYARsection IngColWidth\endcsname%
+    \expandafter\global\expandafter\deflength\csname YAR\theYARsection IngColWidth\endcsname{10em}}%
+  \ifcslength{YAR\theYARsection StepColWidth}{}{%
+    \expandafter\newlength\csname YAR\theYARsection StepColWidth\endcsname%
+    \expandafter\global\expandafter\deflength\csname YAR\theYARsection StepColWidth\endcsname{3em}}%
+  \global\deflength{\YARWidestIngDent}{0pt}%
+  \global\deflength{\YARWidestIngredient}{0pt}%
+  \global\deflength{\YARWidestStepNum}{0pt}%
+}
+%    \end{macrocode}
+%
+% We start the first recipe section automatically at the beginning of the
+% document.
+%
+%    \begin{macrocode}
+\AtBeginDocument{\YARStartNewSection}
+%    \end{macrocode}
+%
+% The user-facing command for this ends the current recipe section and starts a
+% new one.
+%
+%    \begin{macrocode}
+\NewDocumentCommand\yarsection{}{\YARCaclulateWidths\YARStartNewSection}
+%    \end{macrocode}
+%
+% We close off the final recipe section at the end of the document and request
+% another run if we need to.
+%
+%    \begin{macrocode}
+\AtEndDocument{%
+  \YARCaclulateWidths
+  \iftoggle{YARrerun}{%
+   \@latex@warning@no@line{Rerun to correct yarecipe widths.}%
+  }%
+}
+%    \end{macrocode}
+%
+% \section{Explicit syntax}
+%
+% We provide a verbose syntax, where the recipe is set in \env{YARecipe}, and
+% each row is a \env{YARIngBox} followed by a \env{YARMethodBox}.
+%
 %    \begin{macrocode}
 \NewDocumentEnvironment{YARIngBox}{}{%
-\begin{minipage}[t]{\ingcolwidth}%
+\begin{minipage}[t]{\csname YAR\theYARsection IngColWidth\endcsname}%
 \raggedright
 }{%
 \strut
@@ -543,57 +652,72 @@ Centre your mug in the middle of the microwave oven and cook on High for 1½--2 
 }
 %    \end{macrocode}
 %
+% We need another counter for the steps within a recipe.
+%
 %    \begin{macrocode}
+\newcounter{YARstep}
 \newtoggle{inYARMethodBox}
-\NewDocumentEnvironment{YARMethodBox}{}{%
-\stepcounter{YARstep}%
-\adjustbox{gstore width=\YARtempdim,discard}{\stepnofont\theYARstep.\space}%
-\ifdimcomp{\YARtempdim}{>}{\YARwideststep}{%
-  \global\deflength{\YARwideststep}{\YARtempdim}}{}%
-\makebox[\stepcolwidth][r]{\stepnofont\theYARstep.\space}%
-\toggletrue{inYARMethodBox}%
-\begin{minipage}[t]{\methodcolwidth}%
-\methodfont
-}{%
-\strut
-\end{minipage}\par
-\togglefalse{inYARMethodBox}%
-}
 %    \end{macrocode}
 %
 %    \begin{macrocode}
+\NewDocumentEnvironment{YARMethodBox}{}{%
+  \stepcounter{YARstep}%
+  \adjustbox{gstore width=\YARtempdim,discard}{\yarstepnumfont\theYARstep.\space}%
+  \ifdimcomp{\YARtempdim}{>}{\YARWidestStepNum}{%
+    \global\deflength{\YARWidestStepNum}{\YARtempdim}}{}%
+  \makebox[\csname YAR\theYARsection StepColWidth\endcsname][r]%
+    {\yarstepnumfont\theYARstep.\space}%
+  \toggletrue{inYARMethodBox}%
+  \begin{minipage}[t]{\YARMethodColWidth}%
+  \yarmethodfont
+}{%
+  \strut
+  \end{minipage}\par
+  \togglefalse{inYARMethodBox}%
+}
+%    \end{macrocode}
+%
+% The explicit form of the ingredient command is \cs{YARIng}.
+%
+%    \begin{macrocode}
 \NewDocumentCommand\YARIng{om}{%
-  \IfValueT{#1}{\adjustbox{gstore width=\YARtempdim,discard}{\ingrfont#1\space}%
-  \ifdimcomp{\YARtempdim}{>}{\YARwidestquantity}{%
-    \global\deflength{\YARwidestquantity}{\YARtempdim}}{}}%
-  \adjustbox{gstore width=\YARtempdim,discard}{\ingrfont#2}%
-  \IfValueT{#1}{\addtolength{\YARtempdim}{\ingdentwidth}}%
-  \ifdimcomp{\YARtempdim}{>}{\YARwidestingred}{%
-    \global\deflength{\YARwidestingred}{\YARtempdim}}{}%
-  \par\ingrfont\hangpara{\ingdentwidth}{1}%
-  \IfValueT{#1}{\makebox[\ingdentwidth][r]{#1\space}}#2%
+  \IfValueT{#1}{%
+    \adjustbox{gstore width=\YARtempdim,discard}{\yaringredientfont#1\space}%
+  \ifdimcomp{\YARtempdim}{>}{\YARWidestIngDent}{%
+    \global\deflength{\YARWidestIngDent}{\YARtempdim}}{}}%
+  \adjustbox{gstore width=\YARtempdim,discard}{\yaringredientfont#2}%
+  \ifdimcomp{\YARtempdim}{>}{\YARWidestIngredient}{%
+    \global\deflength{\YARWidestIngredient}{\YARtempdim}}{}%
+  \par\yaringredientfont\hangpara{%
+    \csname YAR\theYARsection IngDentWidth\endcsname}{1}%
+  \IfValueT{#1}{%
+    \makebox[\csname YAR\theYARsection IngDentWidth\endcsname][r]{#1\space}}%
+  #2%
 }
 %    \end{macrocode}
 %
 %    \begin{macrocode}
 \NewDocumentEnvironment{YARecipe}{mo}{%
-\textbf{#1}\hfill\emph{#2}\\
-\rule[0.5em]{\linewidth}{0.4pt}\par\nopagebreak
-\setlength{\parindent}{0pt}%
-\setlength{\parskip}{0.5em plus 0.2em minus 0.1em}%
-\setcounter{YARstep}{0}%
-\deflength{\methodcolwidth}{\linewidth-\ingcolwidth-\stepcolwidth}%
+  \textbf{#1}\hfill\emph{#2}\\
+  \rule[0.5em]{\linewidth}{0.4pt}\par\nopagebreak
+  \deflength{\parindent}{0pt}%
+  \deflength{\parskip}{0.5em plus 0.2em minus 0.1em}%
+  \setcounter{YARstep}{0}%
+  \deflength{\YARMethodColWidth}{\linewidth-\csname YAR\theYARsection IngColWidth\endcsname-\csname YAR\theYARsection StepColWidth\endcsname}%
 }{%
 }
 %    \end{macrocode}
 %
+% \section{Implicit syntax}
+%
+% With a bit of wizardry, we can reduce the verbosity needed. The normal user
+% commands expand to the explicit syntax above.
+%
 %    \begin{macrocode}
 \def\YARchecknext#1{%
   \let\YAR@test#1
-  \ifdefequal{\YAR@test}{\ing}{%
-    \wlog{DEBUG: New ingredient found!}%
-  }{%
-    \wlog{DEBUG: No new ingredient found!}\end{YARIngBox}\begin{YARMethodBox}%
+  \ifdefequal{\YAR@test}{\ing}{}{%
+    \end{YARIngBox}\begin{YARMethodBox}%
   }#1%
 }
 %    \end{macrocode}
@@ -626,40 +750,10 @@ Centre your mug in the middle of the microwave oven and cook on High for 1½--2 
 }
 %    \end{macrocode}
 %
-%    \begin{macrocode}
-\AtEndDocument{%
-  \newtoggle{YARrerun}
-  \ifdimcomp{\YARwidestquantity}{=}{\YARwidestquantitylast}{}{%
-    \toggletrue{YARrerun}}
-  \ifdimcomp{\YARwidestingred}{=}{\YARwidestingredlast}{}{%
-    \toggletrue{YARrerun}}
-  \ifdimcomp{\YARwideststep}{=}{\YARwideststeplast}{}{%
-    \toggletrue{YARrerun}}
-  \iftoggle{YARrerun}{%
-   \@latex@warning@no@line{Rerun to correct yarecipe widths}%
-  }
-  \immediate\write\@auxout{%
-    \string\expandafter\string\global\string\expandafter\string\deflength
-    \string\csname\space YARwidestquantitylast\string\endcsname{%
-      \the\csname YARwidestquantity\endcsname
-    }%
-    ^^J%
-    \string\expandafter\string\global\string\expandafter\string\deflength
-    \string\csname\space YARwidestingredlast\string\endcsname{%
-      \the\csname YARwidestingred\endcsname
-    }%
-    ^^J%
-    \string\expandafter\string\global\string\expandafter\string\deflength
-    \string\csname\space YARwideststeplast\string\endcsname{%
-      \the\csname YARwideststep\endcsname
-    }%
-  }%
-}
-%    \end{macrocode}
-%
-%
+% There is no more.
 %
 % \iffalse %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %</sty>
 % \fi %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\Finale
+\toggletrue{YARrerun}

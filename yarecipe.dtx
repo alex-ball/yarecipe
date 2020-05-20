@@ -1,6 +1,6 @@
 % \iffalse meta-comment
 %<*internal|sty>
-\def\Version{2019/02/19 v0.1}
+\def\Version{2020/05/17 v0.1}
 %</internal|sty>
 %<*internal>
 \iffalse
@@ -29,7 +29,7 @@ License: Released under the LaTeX Project Public License v1.3c or later
 \endpreamble
 \postamble
 
-Copyright (C) 2019 by Alex Ball <ab318@bath.ac.uk>
+Copyright (C) 2020 by Alex Ball <ab318@bath.ac.uk>
 
 This work may be distributed and/or modified under the
 conditions of the LaTeX Project Public License (LPPL), either
@@ -70,10 +70,12 @@ Alex Ball.
 %<sty>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<sty>\ProvidesPackage{yarecipe}
 %<*sty>
-    [\Version\space Maps for interactive fiction with TikZ]
+    [\Version\space Yet another package for typesetting recipes]
 %</sty>
 %<*driver>
 \documentclass[12pt]{article}
+\usepackage[british]{babel}
+\usepackage{csquotes}
 % Page Layout
 \usepackage[a4paper,hmargin=30mm,vmargin=25mm,nohead]{geometry}
 % Typography
@@ -130,7 +132,7 @@ Alex Ball.
 \usepackage[bookmarks,raiselinks,pageanchor,hyperindex,colorlinks,pdfencoding=auto]{hyperref}
 \usepackage{bookmark}
 \usepackage{etoolbox}
-\usepackage{xstring}
+\usepackage{xstring,xpatch}
 \usepackage{tcolorbox,doc}
 \makeatletter
 \renewenvironment{theglossary}{%
@@ -165,6 +167,21 @@ Alex Ball.
   , colbacktitle=ExampleFrame!33!ExampleBack
   , docexample/.append style = {parskip}
   }
+\makeatletter
+\RenewDocumentCommand\tcb@ref@doc{msm}{%
+  \ifstrequal{#1}{com}{\hypersetup{linkcolor=\kvtcb@col@command}}{%
+  \ifstrequal{#1}{env}{\hypersetup{linkcolor=\kvtcb@col@environment}}{%
+  \ifstrequal{#1}{key}{\hypersetup{linkcolor=\kvtcb@col@key}}{%
+  }}}%
+  \hyperref[#1:#3]{\texttt{\ref*{#1:#3}}%
+  \IfBooleanTF{#2}{}{%
+    \ifnum\getpagerefnumber{#1:#3}=\thepage%
+    \else%
+      \textsuperscript{\ding{213}\,\kvtcb@text@pageshort\,\pageref*{#1:#3}}%
+    \fi}}%
+  \hypersetup{linkcolor=\kvtcb@colhyper}%
+}
+\makeatother
 \renewcommand{\theFancyVerbLine}{\footnotesize\itshape\color{gray}\arabic{FancyVerbLine}}
 \let\tcbcs=\cs
 \renewcommand*{\cs}[1]{\textcolor{Command}{\tcbcs{#1}}}
@@ -322,7 +339,8 @@ Alex Ball.
 }
 \makeatother
 
-\setlength{\fboxsep}{0pt}
+\usepackage{array}
+%\setlength{\fboxsep}{0pt}
 
 \usepackage{yarecipe}
 
@@ -346,53 +364,213 @@ Alex Ball.
 \changes{v0.1}{2019/02/19}{First public release}
 
 \begin{abstract}
-This is yet another package for typesetting recipes in the German style, with the ingredients list set in parallel with the method, so each item appears where it is first used in the recipe.
+This is yet another package for typesetting recipes in the German style,
+with the ingredients list set in parallel with the method,
+so each item appears where it is first used in the recipe.
 \end{abstract}
 
 \section{Introduction}
 
-Technically, each method step is a single-line paragraph.
-On the line are three boxes: an ingredients box, a step number box, and a method box. The method box is a regular paragraph box. The step number box is a horizontal box. The ingredients box contains a sequence of hanging paragraphs.
+When I first saw the \pkg{cooking} package, I was highly impressed with the
+idea of setting ingredients next to where they are used in a recipe. But
+that package encourages you to split your sentences across both columns:
 
-The idea is to have the size of these boxes change dynamically:
+\begin{center}
+\begin{tabular}{>{\itshape}rl}
+& \large\itshape Dough\\[1ex]
+& Take\\
+25\,g butter & and\\
+100\,g flour & and mix them together.\\
+\end{tabular}
+\end{center}
+
+Which is a bit weird, and works better in German than in English since in German
+the nouns typically come first.
+
+Then I saw the \pkg{cuisine} package, the output of which is the same basic idea
+but providing more separation between ingredient and method. And, indeed, within
+ingredients.
+
+\begin{center}
+\begin{tabular}{@{}rr@{\space}lll@{}}
+\multicolumn{4}{@{}l}{Dough} & \multicolumn{1}{r@{}}{2 portions}\\\hline
+\multicolumn{5}{r@{}}{5 minutes} \\[1ex]
+1 & 25 & g & butter & Mix the butter and\\
+  & 100 & g & flour & flour together.\\[1ex]
+2 & 2 & lvl tsp & cocoa & Stir in the cocoa.\\
+\end{tabular}
+\end{center}
+
+Ruthlessly logical and highly configurable. I used it happily for many years,
+but in the end the aesthetics got to me.
+
+What I wanted was something basically the same as \pkg{cuisine}, but looking a
+bit more, well, normal. And the thing I wanted more than anything was for it to
+choose a suitable set of column widths for me automatically. Life's too short to
+have to do that yourself. Hence, yet another recipe package.
+
+So the idea is that each method step is set as a single-line paragraph. On the
+line are three boxes: an ingredients box, a step number box, and a method box.
+(It makes more sense to me to number the method steps rather than the whole
+line.) The ingredients box contains a sequence of hanging paragraphs, where
+numerical quantities are optionally right-aligned in the first line outdent. The
+step number box is a simple horizontal box. The method box is a regular
+minipage.
+
+The size of these boxes changes dynamically:
 
 \begin{itemize}
-\item First column:
-\begin{itemize}
-\item The hanging indent is the width of largest ingredient quantity.
-\item The whole column is
-\begin{itemize}
-\item at least as wide as the hanging indent;
-\item at least as wide as a user-specified minimum width;
-\item at most as wide as a user-specified maximum width;
-\item otherwise as wide as the widest ingredient (\#2 if there is
-  no \#1, or hanging indent plus \#2 if there is a \#1).
-\end{itemize}
-\end{itemize}
-\item Middle column: as wide as the widest step number plus 1em.
-\item Right column: the remaining line width.
+\item The hanging indent in the ingredients column is the width of largest
+  numerical ingredient quantity (hence typically no wider than about five
+  characters).
+\item The whole ingredients column is as wide as the widest ingredient, up to
+  a defined maximum.
+\item The step number box is as wide as the widest step number plus defined
+  margins.
+\item The method column takes up the remaining line width.
 \end{itemize}
 
-Eventually it will be possible to define sections which are sized
-independently. For each section we will need to write three widths
-to the aux file: widest quantity, widest ingredient, widest step.
+\section{Usage}
 
-\renewcommand{\yarmethodfont}{\raggedright\normalfont}
+\subsection{Loading}
+
+Load the package as normal. There are no package options.
+
+\begin{dispListing}
+\usepackage{yarecipe}
+\end{dispListing}
+
+\subsection{Explicit syntax for setting a recipe}
+
+\renewcommand{\yarmethodfont}{\raggedright\normalfont}%
+Internally, recipes are set as follows:
+
+\begin{dispExample*}{sidebyside}
+\begin{YARecipe}{Recipe name}[note]
+\begin{YARIngBox}
+\YARIng[½]{lb tuppenny rice}
+\YARIng[½]{lb treacle}
+\end{YARIngBox}%
+\begin{YARMethodBox}
+That's the way the money goes.
+Pop goes the weasel.
+\end{YARMethodBox}
+\end{YARecipe}
+\end{dispExample*}
+
+\begin{docEnvironment}{YARecipe}{\marg{title}\oarg{note}}
+Typesets the recipe title and wraps the recipe content. The \meta{title} is
+shown on the left and \meta{note} is on the right. The \meta{environment
+content} should be an alternating sequence of \refEnv*{YARIngBox}es and
+\refEnv*{YARMethodBox}es. Whole paragraphs can be included between pairs of boxes.
+\end{docEnvironment}
+
+\begin{docEnvironment}{YARIngBox}{}
+Typesets the ingredients needed for the current method step. The
+\meta{environment content} should be a sequence of \refCom*{YARIng} commands.
+\end{docEnvironment}
+
+\begin{docCommand}{YARIng}{\oarg{number}\marg{unit and foodstuff}}
+Typesets an ingredient. If \meta{number} is provided, it will be set in a
+right-aligned box the width of the hanging indent, followed by a space.
+Otherwise, the \meta{foodstuff} will be set normally in a hanging paragraph.
+You can abuse this as you will (perhaps putting \enquote{a} or \enquote{some}
+as the \meta{number}) but the \meta{number} must be short or the result will
+look odd. So for example, you might end up with this:\par\smallskip
+
+\begin{tcolorbox}[docexample,sidebyside,righthand width=13em]
+\begin{dispListing*}{blankest,documentation minted options={breaklines}}
+\YARIng[2]{lemons, oranges, or some other citrus fruit}
+\YARIng[200]{g self-raising or strong bread flour}
+\YARIng{a pinch of salt and pepper to taste}
+\end{dispListing*}
+\tcblower
+\begin{adjustbox}{center,minipage=13em}\raggedright
+\hangpara{1.7em}{1}\makebox[1.7em][r]{2\space}lemons, oranges, or some other citrus fruit\par
+\hangpara{1.7em}{1}\makebox[1.7em][r]{200\space}g self-raising or strong bread flour\par
+\hangpara{1.7em}{1}a pinch of salt and pepper to taste
+\end{adjustbox}
+\end{tcolorbox}
+\end{docCommand}
+
+\begin{docEnvironment}{YARMethodBox}{}
+Typesets the step number (in its horizontal box) and the method text (in a
+minipage).
+\end{docEnvironment}
+
+\subsection{Implicit syntax for setting a recipe}
+
+The explicit syntax is all very well, but it's a lot of typing. Therefore a
+shorthand version is provided.
+
+\begin{docEnvironment}{recipe}{\marg{title}\oarg{note}}
+Wraps around the \refEnv*{YARecipe} environment. The arguments are used in the
+same way.
+\end{docEnvironment}
+
+\begin{docCommand}{ing}{\oarg{number}\marg{unit and foodstuff}}
+The arguments are used in the same way as for the \refCom*{YARIng} command. The
+difference is that the first \cs{ing} in a series will start a
+\refEnv*{YARIngBox}, and the last will close it and start a
+\refEnv*{YARMethodBox}.
+\end{docCommand}
+
+\begin{docCommand}{newstep}{}
+Closes the current \refEnv*{YARMethodBox}, inserts an empty \refEnv*{YARIngBox},
+and opens a new \refEnv*{YARMethodBox}.
+\end{docCommand}
+
+This means you can write a recipe like this instead:
+
+\begin{dispExample*}{sidebyside}
+\begin{recipe}{Recipe name}[note]
+\ing[½]{lb tuppenny rice}
+\ing[½]{lb treacle}
+That's the way the money goes.
+\newstep
+Pop goes the weasel.
+\end{recipe}
+\end{dispExample*}
+
+\subsection{Recipe sections}
+
+By default, all recipes in a document will use the same widths, as this gives
+a pleasing effect when several recipes appear on the same page. You may,
+however, have some recipes with unusual ingredient lengths, or set extra wide
+or narrow, and would rather isolate them from your other recipes.
+
+The simple solution employed in this package is the concept of a recipe section.
+All recipes in a recipe section have the same widths, but each recipe section's
+widths are calculated independently from those of the others.
+
+\begin{docCommand}{yarsection}{}
+Starts a new recipe section.
+\end{docCommand}
+
+Recipe sections relate only to recipe geometry and do not interact with document
+sections or numbering.
+
+\subsection{Recipe configuration}
+
+You can adapt the appearance of recipes by changing the following macros.
 
 \section{Examples}
+
+\yarsection
 
 \begin{recipe}{Mug cake}[Makes one cake]
 \ing[4]{tbsp self-raising flour}
 \ing[4]{tbsp caster sugar}
 \ing[2]{tbsp cocoa powder}
-Add 4 tbsp self-raising flour, 4 tbsp caster sugar and 2 tbsp cocoa powder to the largest mug you have (to stop it overflowing in the microwave) and mix.
+Add the self-raising flour, caster sugar and cocoa powder to the largest mug you have (to stop it overflowing in the microwave) and mix.
 \ing[1]{medium egg}
-Add 1 medium egg and mix in as much as you can, but don't worry if there's still dry mix left.
+Add the egg and mix in as much as you can, but don't worry if there's still dry mix left.
 \ing[3]{tbsp milk}
 \ing[3]{tbsp vegetable\slash sunflower oil}
 \ing{a few drops of vanilla essence (or orange or peppermint)}
+Add the milk, vegetable or sunflower oil, and a few drops of vanilla essence, and mix until smooth.
 \ing[10]{tbsp chocolate chips, nuts, or raisins, etc.\@ (optional)}
-Add the 3 tbsp milk, 3 tbsp vegetable or sunflower oil and a few drops of vanilla essence and mix until smooth, before adding 2 tbsp chocolate chips, nuts, or raisins, if using, and mix again.
+If you like, add chocolate chips, nuts, or raisins, and mix again.
 \newstep
 Centre your mug in the middle of the microwave oven and cook on High for 1½--2 mins, or until it has stopped rising and is firm to the touch.
 \end{recipe}

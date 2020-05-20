@@ -675,9 +675,11 @@ Mix with a fork and then by hand until a dough is formed.
 %
 % \begin{itemize}
 % \item\cs{YARWidestIngDent} is the width of the widest numerical quantity
-%   (the optional argument of \cs{ing} plus a space) in the section;
-% \item\cs{YARWidestIngredient} is the width of the widest ingredient (the
-%   mandatory argument of \cs{ing}) in the section.
+%   (the optional argument of \cs{ing} plus a space) in the recipe section;
+% \item\cs{YARWidestFoodstuff} is the width of the widest non-numerical part
+%   of an ingredient (the mandatory argument of \cs{ing}) in the recipe section;
+% \item\cs{YARWidestIngredient} is the width of the widest ingredient in the
+%   recipe section;
 % \item\cs{YARWidestStepNum} is the width of the widest step number (plus a dot
 %   and space) in the section.
 % \end{itemize}
@@ -687,6 +689,7 @@ Mix with a fork and then by hand until a dough is formed.
 %
 %    \begin{macrocode}
 \newlength{\YARWidestIngDent}
+\newlength{\YARWidestFoodstuff}
 \newlength{\YARWidestIngredient}
 \newlength{\YARWidestStepNum}
 \newlength{\YARMethodColWidth}
@@ -730,10 +733,13 @@ Mix with a fork and then by hand until a dough is formed.
 %
 % \cs{YAR-n-IngColWidth} is set to whichever is the narrowest of
 % \cs{yaringredientwidthmax} and [the widest of (\cs{YARWidestIngDent} $+$
-% \cs{YARWidestIngredient}) and \cs{yaringredientwidthmin}].
+% \cs{YARWidestFoodstuff}), \cs{YARWidestIngredient} and
+% \cs{yaringredientwidthmin}].
 %
 %    \begin{macrocode}
-  \deflength{\YARtempdim}{\YARWidestIngDent + \YARWidestIngredient}%
+  \deflength{\YARtempdim}{\YARWidestIngDent + \YARWidestFoodstuff}%
+  \ifdimcomp{\YARtempdim}{<}{\YARWidestIngredient}{%
+    \deflength{\YARtempdim}{\YARWidestIngredient}}{}%
   \ifdimcomp{\YARtempdim}{<}{\yaringredientwidthmin}{%
     \deflength{\YARtempdim}{\yaringredientwidthmin}}{}%
   \ifdimcomp{\YARtempdim}{>}{\yaringredientwidthmax}{%
@@ -784,6 +790,7 @@ Mix with a fork and then by hand until a dough is formed.
     \expandafter\newlength\csname YAR\theYARsection StepColWidth\endcsname%
     \expandafter\global\expandafter\deflength\csname YAR\theYARsection StepColWidth\endcsname{3em}}%
   \global\deflength{\YARWidestIngDent}{0pt}%
+  \global\deflength{\YARWidestFoodstuff}{0pt}%
   \global\deflength{\YARWidestIngredient}{0pt}%
   \global\deflength{\YARWidestStepNum}{0pt}%
 }
@@ -859,23 +866,27 @@ Mix with a fork and then by hand until a dough is formed.
 %
 %    \begin{macrocode}
 \NewDocumentCommand\YARIng{om}{%
-  \IfValueT{#1}{%
-    \adjustbox{gstore width=\YARtempdim,discard}{\yaringredientfont#1\space}%
-  \ifdimcomp{\YARtempdim}{>}{\YARWidestIngDent}{%
-    \global\deflength{\YARWidestIngDent}{\YARtempdim}}{}}%
-  \adjustbox{gstore width=\YARtempdim,discard}{\yaringredientfont#2}%
-  \ifdimcomp{\YARtempdim}{>}{\YARWidestIngredient}{%
-    \global\deflength{\YARWidestIngredient}{\YARtempdim}}{}%
   \par\yaringredientfont\hangpara{%
     \csname YAR\theYARsection IngDentWidth\endcsname}{1}%
-  \IfValueT{#1}{%
-    \makebox[\csname YAR\theYARsection IngDentWidth\endcsname][r]{#1\space}}%
+  \adjustbox{gstore width=\YARtempdim,discard}{\yaringredientfont#2}%
+  \IfValueTF{#1}{%
+    \ifdimcomp{\YARtempdim}{>}{\YARWidestFoodstuff}{%
+      \global\deflength{\YARWidestFoodstuff}{\YARtempdim}}{}%
+    \adjustbox{gstore width=\YARtempdim,discard}{\yaringredientfont#1\space}%
+    \ifdimcomp{\YARtempdim}{>}{\YARWidestIngDent}{%
+      \global\deflength{\YARWidestIngDent}{\YARtempdim}}{}%
+    \makebox[\csname YAR\theYARsection IngDentWidth\endcsname][r]{#1\space}%
+  }{%
+    \ifdimcomp{\YARtempdim}{>}{\YARWidestIngredient}{%
+      \global\deflength{\YARWidestIngredient}{\YARtempdim}}{}%
+  }%
   #2%
 }
 %    \end{macrocode}
 %
 %    \begin{macrocode}
 \NewDocumentEnvironment{YARecipe}{mo}{%
+  \par\bigskip
   \textbf{#1}\hfill\emph{#2}\\
   \rule[0.5em]{\linewidth}{0.4pt}\par\nopagebreak
   \deflength{\parindent}{0pt}%
@@ -883,6 +894,7 @@ Mix with a fork and then by hand until a dough is formed.
   \setcounter{YARstep}{0}%
   \deflength{\YARMethodColWidth}{\linewidth-\csname YAR\theYARsection IngColWidth\endcsname-\csname YAR\theYARsection StepColWidth\endcsname}%
 }{%
+  \bigskip
 }
 %    \end{macrocode}
 %

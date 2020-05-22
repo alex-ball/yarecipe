@@ -587,7 +587,7 @@ Code used to typeset the step number, which is stored in the counter
 \docCounter{YARstep}.
 \end{docKey}
 
-\begin{docKey}{pre method hook}{=\meta{font}}{initially \cs{raggedright}}
+\begin{docKey}{pre method hook}{=\meta{font}}{initially empty}
 Generic hook executed at the beginning of the \refEnv*{YARMethodBox}. Useful for
 setting the paragraph justification.
 \end{docKey}
@@ -640,7 +640,7 @@ you probably don't want that.
 
 \yarsection
 
-\begin{recipe}{Mug cake}[Makes one cake]
+\begin{recipe}[pre method hook=,in toc,before recipe skip=0pt,numbered]{Mug cake}[Makes one cake]
 \ing[4]{tbsp self-raising flour}
 \ing[4]{tbsp caster sugar}
 \ing[2]{tbsp cocoa powder}
@@ -668,7 +668,7 @@ Mix with a fork and then by hand until a dough is formed.
 \yarsection
 But if we start a new recipe section here, you can see the geometry changes:
 
-\begin{recipe}{Pizza dough}[Serves two hungry people]
+\begin{recipe}[numbered]{Pizza dough}[Serves two hungry people]
 \ing[200]{$\!$g self-raising flour}
 \ing[200]{$\!$g Greek yoghurt}
 Mix with a fork and then by hand until a dough is formed.
@@ -703,7 +703,7 @@ Mix with a fork and then by hand until a dough is formed.
 %    \begin{macrocode}
 \RequirePackage{etoolbox}
 \RequirePackage{xparse}
-\RequirePackage{hanging}
+\ifcsdef{hangpara}{}{\RequirePackage{hanging}}
 \RequirePackage{adjustbox}
 \RequirePackage{pgfkeys}
 %    \end{macrocode}
@@ -715,12 +715,16 @@ Mix with a fork and then by hand until a dough is formed.
 %    \begin{macrocode}
 \pgfkeys{/yar/.is family}
 \def\yarset{\pgfqkeys{/yar}}
+\def\YARtempcs{}
+\def\yarget#1{\yarset{#1/.get=\YARtempcs}}
 %    \end{macrocode}
 %
 % We provide keys to customize the fonts used.
 %
 %    \begin{macrocode}
 \yarset{
+  recipe number font/.store in=\YARNumFont,
+  recipe number font=\bfseries,
   title font/.store in=\YARTitleFont,
   title font=\bfseries,
   note font/.store in=\YARNoteFont,
@@ -745,7 +749,7 @@ Mix with a fork and then by hand until a dough is formed.
   step number format/.store in=\YARDoStepNum,
   step number format={\theYARstep.\space},
   pre method hook/.store in=\YARMethodBoxPreHook,
-  pre method hook=\raggedright,
+  pre method hook=,
   post method hook/.store in=\YARMethodBoxPostHook,
   post method hook=\strut,
 }
@@ -779,6 +783,27 @@ Mix with a fork and then by hand until a dough is formed.
   step skip=0.5em plus 0.2em minus 0.1em,
   after recipe skip/.code={\deflength\YARPostRecipeSkip{#1}},
   after recipe skip=\bigskipamount,
+}
+%    \end{macrocode}
+%
+% Keys relevant to indexing
+%
+%    \begin{macrocode}
+\newif\ifYARnumbered
+\newcounter{YARnumber}
+\newif\ifYARecipeInTOC
+\newif\ifYARMarkBoth
+\newif\ifYARMarkRight
+\newif\ifYARecipeInTOC
+\yarset{
+  numbered/.is if=YARnumbered,
+  recipe number format/.store in=\YARDoNum,
+  recipe number format={\theYARnumber\quad},
+  in toc/.is if=YARecipeInTOC,
+  toc level/.initial=subsection,
+  mark/.is choice,
+  mark/both/.is if=YARMarkBoth,
+  mark/right/.is if=YARMarkRight,
 }
 %    \end{macrocode}
 %
@@ -854,7 +879,11 @@ Mix with a fork and then by hand until a dough is formed.
 %
 %    \begin{macrocode}
   \deflength{\YARtempdim}{\YARWidestIngDent}%
-  \ifdimcomp{\YARtempdim}{>}{\YARIngDentWidthMax}{%
+  \ifboolexpr{
+    test {\ifdimcomp{\YARIngDentWidthMax}{>}{0pt}}
+    and
+    test {\ifdimcomp{\YARtempdim}{>}{\YARIngDentWidthMax}}
+  }{%
     \deflength{\YARtempdim}{\YARIngDentWidthMax}}{}%
   \ifdimequal{\csname YAR\theYARsection IngDentWidth\endcsname}%
     {\YARtempdim}{}{\global\toggletrue{YARrerun}}%
@@ -863,7 +892,7 @@ Mix with a fork and then by hand until a dough is formed.
     \string\expandafter\string\newlength\string\csname\space YAR\theYARsection IngDentWidth\string\endcsname}^^J
     \string\expandafter\string\global\string\expandafter\string\deflength
     \string\csname\space YAR\theYARsection IngDentWidth\string\endcsname{%
-      \the\YARWidestIngDent
+      \the\YARtempdim
     }}%
 %    \end{macrocode}
 %
@@ -955,7 +984,7 @@ Mix with a fork and then by hand until a dough is formed.
 \AtEndDocument{%
   \YARCaclulateWidths
   \iftoggle{YARrerun}{%
-   \@latex@warning@no@line{Rerun to correct yarecipe widths.}%
+   \@latex@warning@no@line{Rerun to correct yarecipe widths}%
   }%
 }
 %    \end{macrocode}
@@ -1003,35 +1032,53 @@ Mix with a fork and then by hand until a dough is formed.
 % The explicit form of the ingredient command is \cs{YARIng}.
 %
 %    \begin{macrocode}
+\def\YARIngWrapperHook{}
 \NewDocumentCommand\YARIng{om}{%
   \par\YARIngredientFont\hangpara{%
     \csname YAR\theYARsection IngDentWidth\endcsname}{1}%
   \adjustbox{gstore width=\YARtempdim,discard}{\YARIngredientFont#2}%
-  \IfValueTF{#1}{%
+  \IfNoValueTF{#1}{%
+    \ifdimcomp{\YARtempdim}{>}{\YARWidestIngredient}{%
+      \global\deflength{\YARWidestIngredient}{\YARtempdim}}{}%
+  }{%
     \ifdimcomp{\YARtempdim}{>}{\YARWidestFoodstuff}{%
       \global\deflength{\YARWidestFoodstuff}{\YARtempdim}}{}%
     \adjustbox{gstore width=\YARtempdim,discard}{\YARIngredientFont#1\space}%
     \ifdimcomp{\YARtempdim}{>}{\YARWidestIngDent}{%
       \global\deflength{\YARWidestIngDent}{\YARtempdim}}{}%
     \makebox[\csname YAR\theYARsection IngDentWidth\endcsname][r]{#1\space}%
-  }{%
-    \ifdimcomp{\YARtempdim}{>}{\YARWidestIngredient}{%
-      \global\deflength{\YARWidestIngredient}{\YARtempdim}}{}%
   }%
-  #2%
+  #2\YARIngWrapperHook
 }
 %    \end{macrocode}
 %
 %    \begin{macrocode}
-\NewDocumentEnvironment{YARecipe}{mo}{%
+\def\YARecipeWrapperHook{}
+\NewDocumentEnvironment{YARecipe}{omo}{%
+  \IfValueT{#1}{\yarset{#1}}%
+  \setlength{\parindent}{0pt}%
   \par\vspace{\YARPreRecipeSkip}%
-  {\YARTitleFont #1}\hfill{\YARNoteFont#2}\\[-0.75em]
+  \ifYARnumbered
+    \stepcounter{YARnumber}%
+  \fi
+  \ifYARecipeInTOC
+    \ifcsdef{phantomsection}{\phantomsection}{}%
+    \yarget{toc level}%
+    \addcontentsline{toc}{\YARtempcs}{#2}%
+  \fi
+  \ifYARMarkBoth
+    \markboth{#2}{#2}%
+  \else\ifYARMarkRight
+    \markright{#2}%
+  \fi\fi
+  \ifYARnumbered{\YARNumFont\YARDoNum}\fi
+  {\YARTitleFont #2}\IfValueT{#3}{\hfill{\YARNoteFont#3}}\\[-0.75em]
   \rule{\linewidth}{0.4pt}%
   \deflength{\parindent}{0pt}%
   \deflength{\parskip}{\YARStepSkip}%
   \setcounter{YARstep}{0}%
   \deflength{\YARMethodColWidth}{\linewidth-\csname YAR\theYARsection IngColWidth\endcsname-\csname YAR\theYARsection StepColWidth\endcsname}%
-  \par\nopagebreak
+  \par\nopagebreak\YARecipeWrapperHook
 }{%
   \vspace{\YARPostRecipeSkip}%
 }
@@ -1052,21 +1099,22 @@ Mix with a fork and then by hand until a dough is formed.
 %    \end{macrocode}
 %
 %    \begin{macrocode}
-\NewDocumentEnvironment{recipe}{mo}{%
-  \IfValueTF{#2}{\begin{YARecipe}{#1}[#2]}{\begin{YARecipe}{#1}}%
-  \begin{YARIngBox}%
-  \YARchecknext
+\NewDocumentEnvironment{recipe}{}{%
+  \def\YARecipeWrapperHook{\begin{YARIngBox}\YARchecknext}%
+  \def\YARIngWrapperHook{\YARchecknext}%
+  \begin{YARecipe}%
 }{%
   \end{YARMethodBox}%
   \end{YARecipe}%
+  \def\YARIngWrapperHook{}%
+  \def\YARecipeWrapperHook{}%
 }
 %    \end{macrocode}
 %
 %    \begin{macrocode}
-\NewDocumentCommand\ing{om}{%
+\NewDocumentCommand\ing{}{%
   \iftoggle{inYARMethodBox}{\end{YARMethodBox}\begin{YARIngBox}}{}%
-  \IfValueTF{#1}{\YARIng[#1]{#2}}{\YARIng{#2}}%
-  \YARchecknext
+  \YARIng
 }
 %    \end{macrocode}
 %
@@ -1085,4 +1133,3 @@ Mix with a fork and then by hand until a dough is formed.
 %</sty>
 % \fi %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\Finale
-\toggletrue{YARrerun}

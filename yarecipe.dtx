@@ -75,7 +75,6 @@ Alex Ball.
 %<*driver>
 \documentclass[12pt]{article}
 \usepackage[british]{babel}
-\usepackage{csquotes}
 % Page Layout
 \usepackage[a4paper,hmargin=30mm,vmargin=25mm,nohead]{geometry}
 % Typography
@@ -339,6 +338,7 @@ Alex Ball.
 }
 \makeatother
 
+\usepackage{csquotes}
 \usepackage{array}
 %\setlength{\fboxsep}{0pt}
 
@@ -638,6 +638,8 @@ you probably don't want that.
 
 \section{Examples}
 
+See the pizza recipe \ref{pizza} on page \pageref{pizza}.
+
 \yarsection
 
 \begin{recipe}[pre method hook=,in toc,before recipe skip=0pt,numbered]{Mug cake}[Makes one cake]
@@ -668,7 +670,7 @@ Mix with a fork and then by hand until a dough is formed.
 \yarsection
 But if we start a new recipe section here, you can see the geometry changes:
 
-\begin{recipe}[numbered]{Pizza dough}[Serves two hungry people]
+\begin{recipe}[numbered,label=pizza]{Pizza dough}[Serves two hungry people]
 \ing[200]{$\!$g self-raising flour}
 \ing[200]{$\!$g Greek yoghurt}
 Mix with a fork and then by hand until a dough is formed.
@@ -804,6 +806,7 @@ Mix with a fork and then by hand until a dough is formed.
   mark/.is choice,
   mark/both/.is if=YARMarkBoth,
   mark/right/.is if=YARMarkRight,
+  label/.initial=,
 }
 %    \end{macrocode}
 %
@@ -1021,7 +1024,7 @@ Mix with a fork and then by hand until a dough is formed.
     {\YARStepNumFont\YARDoStepNum}%
   \toggletrue{inYARMethodBox}%
   \begin{minipage}[t]{\YARMethodColWidth}%
-  \YARMethodBoxPreHook\YARMethodFont
+  \YARMethodBoxPreHook\deflength\parindent{0pt}\YARMethodFont
 }{%
   \YARMethodBoxPostHook
   \end{minipage}\par
@@ -1056,10 +1059,10 @@ Mix with a fork and then by hand until a dough is formed.
 \def\YARecipeWrapperHook{}
 \NewDocumentEnvironment{YARecipe}{omo}{%
   \IfValueT{#1}{\yarset{#1}}%
-  \setlength{\parindent}{0pt}%
+  \deflength{\parindent}{0pt}%
   \par\vspace{\YARPreRecipeSkip}%
   \ifYARnumbered
-    \stepcounter{YARnumber}%
+    \refstepcounter{YARnumber}%
   \fi
   \ifYARecipeInTOC
     \ifcsdef{phantomsection}{\phantomsection}{}%
@@ -1071,6 +1074,8 @@ Mix with a fork and then by hand until a dough is formed.
   \else\ifYARMarkRight
     \markright{#2}%
   \fi\fi
+  \yarget{label}\expandafter\ifblank\expandafter{\YARtempcs}{}{%
+    \label{\YARtempcs}\yarset{label=}}%
   \ifYARnumbered{\YARNumFont\YARDoNum}\fi
   {\YARTitleFont #2}\IfValueT{#3}{\hfill{\YARNoteFont#3}}\\[-0.75em]
   \rule{\linewidth}{0.4pt}%

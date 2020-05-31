@@ -457,11 +457,35 @@ Pop goes the weasel.
 \end{YARecipe}
 \end{dispExample*}
 
-\begin{docEnvironment}{YARecipe}{\marg{title}\oarg{note}}
+\begin{docEnvironment}{YARecipe}{\oarg{options}\marg{title}\oarg{note}}
 Typesets the recipe title and wraps the recipe content. The \meta{title} is
 shown on the left and \meta{note} is on the right. The \meta{environment
 content} should be an alternating sequence of \refEnv*{YARIngBox}es and
-\refEnv*{YARMethodBox}es. Whole paragraphs can be included between pairs of boxes.
+\refEnv*{YARMethodBox}es. Whole paragraphs can be included between pairs of
+boxes. See section \ref{sec:options} for the available \meta{options}.
+\end{docEnvironment}
+
+If you don't like the given titling and would rather roll your own,
+or if you need to split your recipe across multiple environments,
+the package provides for simply typesetting the steps without the titling.
+
+\begin{dispExample*}{sidebyside}
+\begin{YARecipeSteps}[first step=3]
+\begin{YARIngBox}
+\YARIng[½]{lb tuppenny rice}
+\YARIng[½]{lb treacle}
+\end{YARIngBox}%
+\begin{YARMethodBox}
+That's the way the money goes.
+Pop goes the weasel.
+\end{YARMethodBox}
+\end{YARecipeSteps}
+\end{dispExample*}
+
+\begin{docEnvironment}{YARecipeSteps}{\oarg{options}}
+Wraps the recipe content without setting a title or affecting the recipe
+counter, page headers, table of contents, and so on.
+See section \ref{sec:options} for the available \meta{options}.
 \end{docEnvironment}
 
 \begin{docEnvironment}{YARIngBox}{}
@@ -481,13 +505,13 @@ look odd. So for example, you might end up with this:\par\smallskip
 \begin{dispListing*}{blankest,documentation minted options={breaklines}}
 \YARIng[2]{lemons, oranges, or some other citrus fruit}
 \YARIng[200]{g self-raising or strong bread flour}
-\YARIng{a pinch of salt and pepper to taste}
+\YARIng{A pinch of salt and pepper to taste}
 \end{dispListing*}
 \tcblower
 \begin{adjustbox}{center,minipage=13em}\raggedright
 \hangpara{1.7em}{1}\makebox[1.7em][r]{2\space}lemons, oranges, or some other citrus fruit\par
 \hangpara{1.7em}{1}\makebox[1.7em][r]{200\space}g self-raising or strong bread flour\par
-\hangpara{1.7em}{1}a pinch of salt and pepper to taste
+\hangpara{1.7em}{1}A pinch of salt and pepper to taste
 \end{adjustbox}
 \end{tcolorbox}
 \end{docCommand}
@@ -502,9 +526,14 @@ minipage).
 The explicit syntax is all very well, but it's a lot of typing. Therefore a
 shorthand version is provided.
 
-\begin{docEnvironment}{recipe}{\marg{title}\oarg{note}}
+\begin{docEnvironment}{recipe}{\oarg{options}\marg{title}\oarg{note}}
 Wraps around the \refEnv*{YARecipe} environment. The arguments are used in the
 same way.
+\end{docEnvironment}
+
+\begin{docEnvironment}{recipesteps}{\oarg{options}}
+Wraps around the \refEnv*{YARecipeSteps} environment.
+See section \ref{sec:options} for the available \meta{options}.
 \end{docEnvironment}
 
 \begin{docCommand}{ing}{\oarg{number}\marg{unit and foodstuff}}
@@ -550,12 +579,49 @@ Recipe sections relate only to recipe geometry and do not interact with document
 sections or numbering.
 
 \subsection{Recipe configuration}
+\label{sec:options}
 
 \begin{docCommand}{yarset}{\marg{keys}}
 Processes \meta{keys} to configure subsequent recipes.
 \end{docCommand}
 
 You can adapt the appearance of recipes with the following keys.
+
+\begin{docKey}{numbered}{=\meta{Boolean}}{default \val{true}, initially \val{false}}
+Whether recipes (or the current recipe) is numbered.
+\end{docKey}
+
+\begin{docKey}{in toc}{=\meta{Boolean}}{default \val{true}, initially \val{false}}
+Whether recipes (or the current recipe) is listed in the table of contents.
+\end{docKey}
+
+\begin{docKey}{toc level}{=\meta{level}}{initially \val{subsection}}
+At what section level recipes should included in the table of contents.
+The value must be a valid section for the class in use, e.g.\@
+\val{section}, \val{subsection}, \val{subsubsection}.
+\end{docKey}
+
+\begin{docKey}{mark}{=\val{both}\textbar\val{right}}{initially empty}
+If set to \docValue{both}, the recipe title will be pushed to both \cs{leftmark}
+and \cs{rightmark}. If set to \docValue{right}, the recipe title will be pushed
+to \cs{rightmark}. If left unset, page headers will be left unaffected.
+As currently implemented, this key should be set \emph{either} once (globally)
+\emph{or} on a per-recipe basis.
+\end{docKey}
+
+\begin{docKey}{label}{=\meta{label}}{initially empty}
+If set for a given recipe, enables cross references to it using
+\cs{ref}\marg{label} and friends.
+\end{docKey}
+
+
+\begin{docKey}{recipe number font}{=\meta{font}}{initially \cs{bfseries}}
+Font used to set each recipe number.
+\end{docKey}
+
+\begin{docKey}{recipe number format}{=\meta{code}}{initially \cs{theYARnumber}\cs{quad}}
+Font used to set each recipe number.
+\end{docKey}
 
 \begin{docKey}{title font}{=\meta{font}}{initially \cs{bfseries}}
 Font used to set the recipe title.
@@ -565,7 +631,7 @@ Font used to set the recipe title.
 Font used to set the note adjacent to the title.
 \end{docKey}
 
-\begin{docKey}{pre ingredient hook}{=\meta{font}}{initially \cs{raggedright}}
+\begin{docKey}{pre ingredient hook}{=\meta{code}}{initially \cs{raggedright}}
 Generic hook executed at the beginning of the \refEnv*{YARIngBox}. Useful for
 setting the paragraph justification.
 \end{docKey}
@@ -574,20 +640,24 @@ setting the paragraph justification.
 Font used to set each ingredient (both the quantity and the foodstuff).
 \end{docKey}
 
-\begin{docKey}{post ingredient hook}{=\meta{font}}{initially \cs{strut}}
+\begin{docKey}{post ingredient hook}{=\meta{code}}{initially \cs{strut}}
 Generic hook executed at the end of the \refEnv*{YARIngBox}.
+\end{docKey}
+
+\begin{docKey}{first step}{=\meta{integer}}{initially 1}
+Number for the first step in this environment.
 \end{docKey}
 
 \begin{docKey}{step number font}{=\meta{font}}{initially \cs{itshape}}
 Font used to set each step number.
 \end{docKey}
 
-\begin{docKey}{step number format}{=\meta{font}}{initially \brackets{\cs{theYARstep}.\cs{space}}}
+\begin{docKey}{step number format}{=\meta{code}}{initially \brackets{\cs{theYARstep}.\cs{space}}}
 Code used to typeset the step number, which is stored in the counter
 \docCounter{YARstep}.
 \end{docKey}
 
-\begin{docKey}{pre method hook}{=\meta{font}}{initially empty}
+\begin{docKey}{pre method hook}{=\meta{code}}{initially empty}
 Generic hook executed at the beginning of the \refEnv*{YARMethodBox}. Useful for
 setting the paragraph justification.
 \end{docKey}
@@ -596,7 +666,7 @@ setting the paragraph justification.
 Font used to set the method.
 \end{docKey}
 
-\begin{docKey}{post method hook}{=\meta{font}}{initially \cs{strut}}
+\begin{docKey}{post method hook}{=\meta{code}}{initially \cs{strut}}
 Generic hook executed at the end of the \refEnv*{YARMethodBox}.
 \end{docKey}
 
@@ -740,14 +810,18 @@ Mix with a fork and then by hand until a dough is formed.
 }
 %    \end{macrocode}
 %
-% Generic hooks.
+% We provide keys to inject code into recipes.
 %
 %    \begin{macrocode}
+\def\YARStartStep{1}
 \yarset{
+  recipe number format/.store in=\YARDoNum,
+  recipe number format={\theYARnumber\quad},
   pre ingredient hook/.store in=\YARIngBoxPreHook,
   pre ingredient hook=\raggedright,
   post ingredient hook/.store in=\YARIngBoxPostHook,
   post ingredient hook=\strut,
+  first step/.store in=\YARStartStep,
   step number format/.store in=\YARDoStepNum,
   step number format={\theYARstep.\space},
   pre method hook/.store in=\YARMethodBoxPreHook,
@@ -788,7 +862,7 @@ Mix with a fork and then by hand until a dough is formed.
 }
 %    \end{macrocode}
 %
-% Keys relevant to indexing
+% We provide keys relevant to indexing and page furniture.
 %
 %    \begin{macrocode}
 \newif\ifYARnumbered
@@ -799,8 +873,6 @@ Mix with a fork and then by hand until a dough is formed.
 \newif\ifYARecipeInTOC
 \yarset{
   numbered/.is if=YARnumbered,
-  recipe number format/.store in=\YARDoNum,
-  recipe number format={\theYARnumber\quad},
   in toc/.is if=YARecipeInTOC,
   toc level/.initial=subsection,
   mark/.is choice,
@@ -997,6 +1069,9 @@ Mix with a fork and then by hand until a dough is formed.
 % We provide a verbose syntax, where the recipe is set in \env{YARecipe}, and
 % each row is a \env{YARIngBox} followed by a \env{YARMethodBox}.
 %
+% The \env{YARIngBox} is a \env{minipage} of appropriate width, begun and ended
+% with the hooks provided above.
+%
 %    \begin{macrocode}
 \NewDocumentEnvironment{YARIngBox}{}{%
 \begin{minipage}[t]{\csname YAR\theYARsection IngColWidth\endcsname}%
@@ -1007,24 +1082,35 @@ Mix with a fork and then by hand until a dough is formed.
 }
 %    \end{macrocode}
 %
-% We need another counter for the steps within a recipe.
+% We need a counter for the steps within a recipe, and a toogle to let us know
+% if we are currently within a a \env{YARMethodBox}.
 %
 %    \begin{macrocode}
 \newcounter{YARstep}
 \newtoggle{inYARMethodBox}
 %    \end{macrocode}
 %
+% When we start a \env{YARMethodBox}, we measure the step number and record the
+% width if it is wider than before, then set it in a simple \cs{makebox} of the
+% correct width and increment the counter. We then start a \env{minipage} of
+% appropriate width, begun and ended with the hooks provided above. We also set
+% the paragraph shape and font. Paragraphs within a step have the same spacing
+% as between steps. The toggle is on within the environment.
+%
 %    \begin{macrocode}
 \NewDocumentEnvironment{YARMethodBox}{}{%
-  \stepcounter{YARstep}%
   \adjustbox{gstore width=\YARtempdim,discard}{\YARStepNumFont\YARDoStepNum}%
   \ifdimcomp{\YARtempdim}{>}{\YARWidestStepNum}{%
     \global\deflength{\YARWidestStepNum}{\YARtempdim}}{}%
   \makebox[\csname YAR\theYARsection StepColWidth\endcsname][r]%
     {\YARStepNumFont\YARDoStepNum}%
+  \stepcounter{YARstep}%
   \toggletrue{inYARMethodBox}%
   \begin{minipage}[t]{\YARMethodColWidth}%
-  \YARMethodBoxPreHook\deflength\parindent{0pt}\YARMethodFont
+  \YARMethodBoxPreHook
+  \deflength\parindent{0pt}%
+  \deflength\parskip{\YARStepSkip}%
+  \YARMethodFont
 }{%
   \YARMethodBoxPostHook
   \end{minipage}\par
@@ -1032,7 +1118,16 @@ Mix with a fork and then by hand until a dough is formed.
 }
 %    \end{macrocode}
 %
-% The explicit form of the ingredient command is \cs{YARIng}.
+% The explicit form of the ingredient command is \cs{YARIng}. If both arguments
+% are set, their widths are measured individually, updating \cs{YARWidestIngDent}
+% and \cs{YARWidestFoodstuff} respectively. If only one argument is given,
+% the width is used to update \cs{YARWidestIngredient} instead.
+%
+% The ingredient is set as a hanging paragraph, with pre- and post-hooks and
+% font applied. The optional argument is put in a right-aligned \cs{makebox} the
+% same width as the indent.
+%
+% The \cs{YARIngWrapperHook} simplifies the implicit syntax discussed below.
 %
 %    \begin{macrocode}
 \def\YARIngWrapperHook{}
@@ -1054,6 +1149,17 @@ Mix with a fork and then by hand until a dough is formed.
   #2\YARIngWrapperHook
 }
 %    \end{macrocode}
+%
+% When starting a \env{YARecipe}, we process any keys given. We insert the
+% appropriate space before the recipe, and according to the options trigger
+% the recipe being included in the table of contents and page headers, and label
+% it for use as a reference target.
+%
+% We then set the right paragraph shape, set the recipe title, then calculate
+% how wide the method column should be. The \cs{YARecipeWrapperHook} simplifies
+% the implicit syntax discussed below.
+%
+% When closing the environment, we insert the chosen vertical space.
 %
 %    \begin{macrocode}
 \def\YARecipeWrapperHook{}
@@ -1079,9 +1185,25 @@ Mix with a fork and then by hand until a dough is formed.
   \ifYARnumbered{\YARNumFont\YARDoNum}\fi
   {\YARTitleFont #2}\IfValueT{#3}{\hfill{\YARNoteFont#3}}\\[-0.75em]
   \rule{\linewidth}{0.4pt}%
+  \deflength{\parskip}{\YARStepSkip}%
+  \setcounter{YARstep}{\YARStartStep}%
+  \deflength{\YARMethodColWidth}{\linewidth-\csname YAR\theYARsection IngColWidth\endcsname-\csname YAR\theYARsection StepColWidth\endcsname}%
+  \par\nopagebreak\YARecipeWrapperHook
+}{%
+  \vspace{\YARPostRecipeSkip}%
+}
+%    \end{macrocode}
+%
+% With \env{YARecipeSteps}, we basically take \env{YARecipe} and strip out all
+% the parts related to titling and cross-referencing.
+%
+%    \begin{macrocode}
+\NewDocumentEnvironment{YARecipeSteps}{o}{%
+  \IfValueT{#1}{\yarset{#1}}%
+  \par\vspace{\YARPreRecipeSkip}%
   \deflength{\parindent}{0pt}%
   \deflength{\parskip}{\YARStepSkip}%
-  \setcounter{YARstep}{0}%
+  \setcounter{YARstep}{\YARStartStep}%
   \deflength{\YARMethodColWidth}{\linewidth-\csname YAR\theYARsection IngColWidth\endcsname-\csname YAR\theYARsection StepColWidth\endcsname}%
   \par\nopagebreak\YARecipeWrapperHook
 }{%
@@ -1094,6 +1216,10 @@ Mix with a fork and then by hand until a dough is formed.
 % With a bit of wizardry, we can reduce the verbosity needed. The normal user
 % commands expand to the explicit syntax above.
 %
+% \cs{YARchecknext} is used inside a \env{YARIngBox}. It checks if the next
+% token is \cs{ing}, and if it isn't, closes the current \env{YARIngBox} and
+% starts a \env{YARMethodBox}.
+%
 %    \begin{macrocode}
 \def\YARchecknext#1{%
   \let\YAR@test#1
@@ -1102,6 +1228,10 @@ Mix with a fork and then by hand until a dough is formed.
   }#1%
 }
 %    \end{macrocode}
+%
+% Using \env{recipe} starts a \env{YARecipe}, but then (using the hooks
+% introduced above) immediately starts a \env{YARIngBox} and begins scanning for
+% \cs{ing} tokens.
 %
 %    \begin{macrocode}
 \NewDocumentEnvironment{recipe}{}{%
@@ -1115,6 +1245,25 @@ Mix with a fork and then by hand until a dough is formed.
   \def\YARecipeWrapperHook{}%
 }
 %    \end{macrocode}
+% Using \env{recipesteps} does the same but starts a \env{YARecipeSteps}
+% environment instead.
+%
+%    \begin{macrocode}
+\NewDocumentEnvironment{recipesteps}{}{%
+  \def\YARecipeWrapperHook{\begin{YARIngBox}\YARchecknext}%
+  \def\YARIngWrapperHook{\YARchecknext}%
+  \begin{YARecipeSteps}%
+}{%
+  \end{YARMethodBox}%
+  \end{YARecipeSteps}%
+  \def\YARIngWrapperHook{}%
+  \def\YARecipeWrapperHook{}%
+}
+%    \end{macrocode}
+%
+% The main thing of interest that \cs{ing} does is check to see if we are in a
+% \env{YARMethodBox} and, if so, closes it and starts a \env{YARIngBox} before
+% calling \cs{YARIng}.
 %
 %    \begin{macrocode}
 \NewDocumentCommand\ing{}{%
@@ -1122,6 +1271,9 @@ Mix with a fork and then by hand until a dough is formed.
   \YARIng
 }
 %    \end{macrocode}
+%
+% \cs{newstep} manually closes the current \env{YARMethodBox} and starts a new
+% one, inserting an empty \env{YARIngBox} inbetween to preserve the spacing.
 %
 %    \begin{macrocode}
 \newcommand{\newstep}{%

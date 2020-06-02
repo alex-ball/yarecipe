@@ -789,17 +789,16 @@ Mix with a fork and then by hand until a dough is formed.
 %
 % \begin{macro}{yarset}
 % \begin{macro}{yarget}
+% \begin{macro}{yarlet}
 % We define our own key handlers for setting and getting keys.
 %
 %    \begin{macrocode}
 \pgfkeys{/yar/.is family}
 \def\yarset{\pgfqkeys{/yar}}
-\NewExpandableDocumentCommand\yarget{om}{%
-  \IfValueTF{#1}{%
-    \pgfkeysgetvalue{/yar/#2}{#1}%
-  }{%
-    \pgfkeysvalueof{/yar/#2}}}
+\def\yarget#1{\pgfkeysvalueof{/yar/#1}}
+\def\yarlet#1#2{\pgfkeysgetvalue{/yar/#2}{#1}}
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -1285,7 +1284,7 @@ Mix with a fork and then by hand until a dough is formed.
   \else\ifYARMarkRight
     \markright{#2}%
   \fi\fi
-  \yarget[\YARtempcs]{label}%
+  \yarlet\YARtempcs{label}%
   \expandafter\ifblank\expandafter{\YARtempcs}{}{%
     \label{\YARtempcs}\yarset{label=}}%
   \ifYARnumbered{\yarget{recipe number font}\yarget{recipe number format}}\fi

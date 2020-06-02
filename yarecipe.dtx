@@ -442,6 +442,7 @@ Load the package as normal. There are no package options.
 
 \subsection{Explicit syntax for setting a recipe}
 
+\yarset{pre method hook=\raggedright}%
 Internally, recipes are set as follows:
 
 \begin{dispExample*}{sidebyside}
@@ -708,30 +709,34 @@ you probably don't want that.
 
 \section{Examples}
 
-See the pizza recipe \ref{pizza} on page \pageref{pizza}.
+You can label recipes so you can refer to them. See recipe \ref{pizza} for pizza
+dough on page \pageref{pizza}.
 
 \yarsection
-
 \begin{recipe}[pre method hook=,in toc,before recipe skip=0pt,numbered]{Mug cake}[Makes one cake]
 \ing[4]{tbsp self-raising flour}
 \ing[4]{tbsp caster sugar}
 \ing[2]{tbsp cocoa powder}
-Add the self-raising flour, caster sugar and cocoa powder to the largest mug you have (to stop it overflowing in the microwave) and mix.
+Mix together the self-raising flour, caster sugar and cocoa powder in a large mug.
 \ing[1]{medium egg}
-Add the egg and mix in as much as you can, but don't worry if there's still dry mix left.
+Add the egg and mix it in until fully absorbed.
 \ing[3]{tbsp milk}
-\ing[3]{tbsp vegetable\slash sunflower oil}
-\ing{a few drops of vanilla essence (or orange or peppermint)}
-Add the milk, vegetable or sunflower oil, and a few drops of vanilla essence, and mix until smooth.
-\ing[10]{tbsp chocolate chips, nuts, or raisins, etc.\@ (optional)}
-If you like, add chocolate chips, nuts, or raisins, and mix again.
+\ing[3]{tbsp cooking oil}
+\ing[A]{few drops of vanilla essence}
+Add the milk, cooking oil (vegetable or sunflower is best),
+and a few drops of vanilla essence. Mix until smooth.
+\ing[1]{tbsp chocolate chips, nuts, raisins, etc.\@ (optional)}
+If you want to add anything special to your cake, such as fruit, nuts,
+chocolate chips, or lavender, mix it in at this point.
 \newstep
-Centre your mug in the middle of the microwave oven and cook on High for 1½--2 mins, or until it has stopped rising and is firm to the touch.
+Put your mug in the centre of the microwave and cook on full power for about 1½
+mins (900W)\slash 2 mins (750W). You will know it is ready when it has stopped
+rising and is firm to the touch.
 \end{recipe}
 
 The recipes above and below use the same widths.
 
-\begin{recipe}{Pizza dough}[Serves two hungry people]
+\begin{recipe}{Pizza dough}[Serves three]
 \ing[200]{$\!$g self-raising flour}
 \ing[200]{$\!$g Greek yoghurt}
 Mix with a fork and then by hand until a dough is formed.
@@ -740,7 +745,7 @@ Mix with a fork and then by hand until a dough is formed.
 \yarsection
 But if we start a new recipe section here, you can see the geometry changes:
 
-\begin{recipe}[numbered,label=pizza]{Pizza dough}[Serves two hungry people]
+\begin{recipe}[numbered,label=pizza]{Pizza dough}[Serves three]
 \ing[200]{$\!$g self-raising flour}
 \ing[200]{$\!$g Greek yoghurt}
 Mix with a fork and then by hand until a dough is formed.

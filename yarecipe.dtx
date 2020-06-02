@@ -587,11 +587,11 @@ Processes \meta{keys} to configure subsequent recipes.
 
 You can adapt the appearance of recipes with the following keys.
 
-\begin{docKey}{numbered}{=\meta{Boolean}}{default \val{true}, initially \val{false}}
+\begin{docKey}{numbered}{=\val{true}\textbar\val{false}}{default \val{true}, initially \val{false}}
 Whether recipes (or the current recipe) is numbered.
 \end{docKey}
 
-\begin{docKey}{in toc}{=\meta{Boolean}}{default \val{true}, initially \val{false}}
+\begin{docKey}{in toc}{=\val{true}\textbar\val{false}}{default \val{true}, initially \val{false}}
 Whether recipes (or the current recipe) is listed in the table of contents.
 \end{docKey}
 
@@ -782,61 +782,117 @@ Mix with a fork and then by hand until a dough is formed.
 %
 % \subsection{Customization hooks}
 %
-% We define our own key handler.
+% \begin{macro}{yarset}
+% \begin{macro}{yarget}
+% We define our own key handlers for setting and getting keys.
 %
 %    \begin{macrocode}
 \pgfkeys{/yar/.is family}
 \def\yarset{\pgfqkeys{/yar}}
-\def\YARtempcs{}
-\def\yarget#1{\yarset{#1/.get=\YARtempcs}}
+\NewExpandableDocumentCommand\yarget{om}{%
+  \IfValueTF{#1}{%
+    \pgfkeysgetvalue{/yar/#2}{#1}%
+  }{%
+    \pgfkeysvalueof{/yar/#2}}}
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 %
+% \begin{optionkey}{recipe number font}
+% \begin{optionkey}{title font}
+% \begin{optionkey}{note font}
+% \begin{optionkey}{ingredient font}
+% \begin{optionkey}{step number font}
+% \begin{optionkey}{method font}
 % We provide keys to customize the fonts used.
 %
 %    \begin{macrocode}
 \yarset{
-  recipe number font/.store in=\YARNumFont,
-  recipe number font=\bfseries,
-  title font/.store in=\YARTitleFont,
-  title font=\bfseries,
-  note font/.store in=\YARNoteFont,
-  note font=\itshape,
-  ingredient font/.store in=\YARIngredientFont,
-  ingredient font=\normalfont,
-  step number font/.store in=\YARStepNumFont,
-  step number font=\normalfont\itshape,
-  method font/.store in=\YARMethodFont,
-  method font=\normalfont,
+  recipe number font/.initial=\bfseries,
+  title font/.initial=\bfseries,
+  note font/.initial=\itshape,
+  ingredient font/.initial=\normalfont,
+  step number font/.initial=\normalfont\itshape,
+  method font/.initial=\normalfont,
 }
 %    \end{macrocode}
+% \end{optionkey}
+% \end{optionkey}
+% \end{optionkey}
+% \end{optionkey}
+% \end{optionkey}
+% \end{optionkey}
 %
-% We provide keys to inject code into recipes.
+% \begin{optionkey}{first step}
+% By default we start recipes with step 1, but to make this configurable we
+% save the start number as \cs{YARStartStep} and make it possible to change it
+% via a key, \key{first step}.
 %
 %    \begin{macrocode}
-\def\YARStartStep{1}
 \yarset{
-  recipe number format/.store in=\YARDoNum,
-  recipe number format={\theYARnumber\quad},
-  pre ingredient hook/.store in=\YARIngBoxPreHook,
-  pre ingredient hook=\raggedright,
-  post ingredient hook/.store in=\YARIngBoxPostHook,
-  post ingredient hook=\strut,
-  first step/.store in=\YARStartStep,
-  step number format/.store in=\YARDoStepNum,
-  step number format={\theYARstep.\space},
-  pre method hook/.store in=\YARMethodBoxPreHook,
-  pre method hook=,
-  post method hook/.store in=\YARMethodBoxPostHook,
-  post method hook=\strut,
+  first step/.initial=1,
+%    \end{macrocode}
+% \end{optionkey}
+%
+% \begin{optionkey}{recipe number format}
+% \begin{optionkey}{step number format}
+% We provide keys for customizing how the serial numbers are printed.
+%
+%    \begin{macrocode}
+  recipe number format/.initial={\theYARnumber\quad},
+  step number format/.initial={\theYARstep.\space},
+%    \end{macrocode}
+% \end{optionkey}
+% \end{optionkey}
+%
+% \begin{optionkey}{pre ingredient hook}
+% \begin{optionkey}{post ingredient hook}
+% \begin{optionkey}{pre method hook}
+% \begin{optionkey}{post method hook}
+% We provide some generic hooks for injecting code into \env{YARIngBox}es and
+% \env{YARMethodBox}es.
+%
+%    \begin{macrocode}
+  pre ingredient hook/.initial=\raggedright,
+  post ingredient hook/.initial=\strut,
+  pre method hook/.initial=,
+  post method hook/.initial=\strut,
 }
 %    \end{macrocode}
+% \end{optionkey}
+% \end{optionkey}
+% \end{optionkey}
+% \end{optionkey}
 %
-% We provide widths that set limits on how wide or narrow the ingredient
-% column can go. The length \cs{yaringredientwidthmax} is an absolute maximum,
-% and defaults to 40\% of the text width at the point the package is loaded.
-% The length \cs{yaringredientwidthmin} sets the minimum, but will be ignored
-% if the \cs{yaringredientwidthmax} is smaller or the widest numeric quantity
-% is larger.
+% \begin{macro}{YARIngDentWidthMin}
+% \begin{macro}{YARIngDentWidthMax}
+% \begin{macro}{YARIngBoxWidthMin}
+% \begin{macro}{YARIngBoxWidthMax}
+% \begin{macro}{YARPreRecipeSkip}
+% \begin{macro}{YARStepSkip}
+% \begin{macro}{YARPostRecipeSkip}
+% \begin{optionkey}{min indent width}
+% \begin{optionkey}{max indent width}
+% \begin{optionkey}{min ingredient width}
+% \begin{optionkey}{max ingredient width}
+% \begin{optionkey}{before recipe skip}
+% \begin{optionkey}{step skip}
+% \begin{optionkey}{after recipe skip}
+% We provide lengths that configure the layout of recipes:
+% \begin{itemize}
+% \item\cs{YARIngDentWidthMin} and \cs{YARIngBoxWidthMin} are effectively the
+%   minimum widths of the hanging indent and column width respectively for the
+%   ingredients. More precisely, they are used as the initial values of
+%   \cs{YARWidestIngDent} and \cs{YARWidestIngredient} respectively when the
+%   \emph{next} recipe section starts.
+% \item\cs{YARIngDentWidthMax} and \cs{YARIngBoxWidthMax} set absolute limits
+%   on how wide the ingredient hanging indent and column width are allowed to
+%   grow in the \emph{current} recipe section. \cs{YARIngBoxWidthMax} defaults
+%   to 40\% of the text width at the point the package is loaded.
+% \item\cs{YARPreRecipeSkip}, \cs{YARStepSkip} and \cs{YARPostRecipeSkip} are
+%   respectively the vertical glue inserted above, between paragraphs within,
+%   and below a recipe (or set of recipe steps).
+% \end{itemize}
 %
 %    \begin{macrocode}
 \newlength{\YARIngDentWidthMin}
@@ -861,6 +917,20 @@ Mix with a fork and then by hand until a dough is formed.
   after recipe skip=\bigskipamount,
 }
 %    \end{macrocode}
+% \end{optionkey}
+% \end{optionkey}
+% \end{optionkey}
+% \end{optionkey}
+% \end{optionkey}
+% \end{optionkey}
+% \end{optionkey}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 %
 % We provide keys relevant to indexing and page furniture.
 %
@@ -892,6 +962,7 @@ Mix with a fork and then by hand until a dough is formed.
 \newcounter{YARsection}
 %    \end{macrocode}
 %
+% \begin{macro}{YARMethodColWidth}
 % Within each recipe, we parameterize the geometry with these four lengths,
 % where |-n-| is the number of the recipe section:
 % \begin{itemize}
@@ -902,9 +973,13 @@ Mix with a fork and then by hand until a dough is formed.
 % \item\cs{YARMethodColWidth} is the width of the method column.
 % \end{itemize}
 %
+% \begin{macro}{YARWidestIngDent}
+% \begin{macro}{YARWidestFoodstuff}
+% \begin{macro}{YARWidestIngredient}
+% \begin{macro}{YARWidestStepNum}
 % In due course, the section-specific widths are calculated are based on the
 % width of column content. In order to keep track of column content, we need
-% three more lengths:
+% four more lengths:
 %
 % \begin{itemize}
 % \item\cs{YARWidestIngDent} is the width of the widest numerical quantity
@@ -927,12 +1002,19 @@ Mix with a fork and then by hand until a dough is formed.
 \newlength{\YARWidestStepNum}
 \newlength{\YARMethodColWidth}
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 %
+% \begin{macro}{YARtempdim}
 % We need another length, \cs{YARtempdim}, to help with calculations:
 %
 %    \begin{macrocode}
 \newlength{\YARtempdim}
 %    \end{macrocode}
+% \end{macro}
 %
 % At the end of each section, the widths the section should have had are
 % calculated and saved to the aux file. If these are different from what the
@@ -942,6 +1024,7 @@ Mix with a fork and then by hand until a dough is formed.
 \newtoggle{YARrerun}
 %    \end{macrocode}
 %
+% \begin{macro}{YARCaclulateWidths}
 % Note that, since the aux file is read twice, we don't know if the lengths in
 % question have been initialized at the point it is read. We therefore have to
 % test for this before performing the initialization.
@@ -950,7 +1033,8 @@ Mix with a fork and then by hand until a dough is formed.
 \def\YARCaclulateWidths{%
 %    \end{macrocode}
 %
-% \cs{YAR-n-IngDentWidth} is set to the \cs{YARWidestIngDent}.
+% \cs{YAR-n-IngDentWidth} is set to whichever is the narrowest of
+% \cs{YARIngDentWidthMax} and the \cs{YARWidestIngDent}.
 %
 %    \begin{macrocode}
   \deflength{\YARtempdim}{\YARWidestIngDent}%
@@ -972,9 +1056,8 @@ Mix with a fork and then by hand until a dough is formed.
 %    \end{macrocode}
 %
 % \cs{YAR-n-IngColWidth} is set to whichever is the narrowest of
-% \cs{yaringredientwidthmax} and [the widest of (\cs{YARWidestIngDent} $+$
-% \cs{YARWidestFoodstuff}), \cs{YARWidestIngredient} and
-% \cs{yaringredientwidthmin}].
+% \cs{YARIngBoxWidthMax} and [the widest of (\cs{YARWidestIngDent} $+$
+% \cs{YARWidestFoodstuff}) and \cs{YARWidestIngredient}.
 %
 %    \begin{macrocode}
   \deflength{\YARtempdim}{\YARWidestIngDent + \YARWidestFoodstuff}%
@@ -1013,7 +1096,9 @@ Mix with a fork and then by hand until a dough is formed.
     }}%
 }
 %    \end{macrocode}
+% \end{macro}
 %
+% \begin{macro}{YARStartNewSection}
 % When we start a new section, we increment the section counter. If the widths
 % for this section have not been initialized by the aux file, we initialize them
 % with some reasonable values. We also need to reset the widest widths back
@@ -1037,6 +1122,7 @@ Mix with a fork and then by hand until a dough is formed.
   \global\deflength{\YARWidestStepNum}{0pt}%
 }
 %    \end{macrocode}
+% \end{macro}
 %
 % We start the first recipe section automatically at the beginning of the
 % document.
@@ -1045,12 +1131,14 @@ Mix with a fork and then by hand until a dough is formed.
 \AtBeginDocument{\YARStartNewSection}
 %    \end{macrocode}
 %
+% \begin{macro}{yarsection}
 % The user-facing command for this ends the current recipe section and starts a
 % new one.
 %
 %    \begin{macrocode}
 \NewDocumentCommand\yarsection{}{\YARCaclulateWidths\YARStartNewSection}
 %    \end{macrocode}
+% \end{macro}
 %
 % We close off the final recipe section at the end of the document and request
 % another run if we need to.
@@ -1064,23 +1152,25 @@ Mix with a fork and then by hand until a dough is formed.
 }
 %    \end{macrocode}
 %
-% \section{Explicit syntax}
+% \subsection{Explicit syntax}
 %
 % We provide a verbose syntax, where the recipe is set in \env{YARecipe}, and
 % each row is a \env{YARIngBox} followed by a \env{YARMethodBox}.
 %
+% \begin{environment}{YARIngBox}
 % The \env{YARIngBox} is a \env{minipage} of appropriate width, begun and ended
 % with the hooks provided above.
 %
 %    \begin{macrocode}
 \NewDocumentEnvironment{YARIngBox}{}{%
 \begin{minipage}[t]{\csname YAR\theYARsection IngColWidth\endcsname}%
-\YARIngBoxPreHook
+\yarget{pre ingredient hook}%
 }{%
-\YARIngBoxPostHook
+\yarget{post ingredient hook}%
 \end{minipage}%
 }
 %    \end{macrocode}
+% \end{environment}
 %
 % We need a counter for the steps within a recipe, and a toogle to let us know
 % if we are currently within a a \env{YARMethodBox}.
@@ -1090,6 +1180,7 @@ Mix with a fork and then by hand until a dough is formed.
 \newtoggle{inYARMethodBox}
 %    \end{macrocode}
 %
+% \begin{environment}{YARMethodBox}
 % When we start a \env{YARMethodBox}, we measure the step number and record the
 % width if it is wider than before, then set it in a simple \cs{makebox} of the
 % correct width and increment the counter. We then start a \env{minipage} of
@@ -1099,25 +1190,28 @@ Mix with a fork and then by hand until a dough is formed.
 %
 %    \begin{macrocode}
 \NewDocumentEnvironment{YARMethodBox}{}{%
-  \adjustbox{gstore width=\YARtempdim,discard}{\YARStepNumFont\YARDoStepNum}%
+  \adjustbox{gstore width=\YARtempdim,discard}{%
+    \yarget{step number font}\yarget{step number format}}%
   \ifdimcomp{\YARtempdim}{>}{\YARWidestStepNum}{%
     \global\deflength{\YARWidestStepNum}{\YARtempdim}}{}%
-  \makebox[\csname YAR\theYARsection StepColWidth\endcsname][r]%
-    {\YARStepNumFont\YARDoStepNum}%
+  \makebox[\csname YAR\theYARsection StepColWidth\endcsname][r]{%
+    \yarget{step number font}\yarget{step number format}}%
   \stepcounter{YARstep}%
   \toggletrue{inYARMethodBox}%
   \begin{minipage}[t]{\YARMethodColWidth}%
-  \YARMethodBoxPreHook
+  \yarget{pre method hook}%
   \deflength\parindent{0pt}%
   \deflength\parskip{\YARStepSkip}%
-  \YARMethodFont
+  \yarget{method font}%
 }{%
-  \YARMethodBoxPostHook
+  \yarget{post method hook}%
   \end{minipage}\par
   \togglefalse{inYARMethodBox}%
 }
 %    \end{macrocode}
+% \end{environment}
 %
+% \begin{macro}{YARIng}
 % The explicit form of the ingredient command is \cs{YARIng}. If both arguments
 % are set, their widths are measured individually, updating \cs{YARWidestIngDent}
 % and \cs{YARWidestFoodstuff} respectively. If only one argument is given,
@@ -1127,21 +1221,24 @@ Mix with a fork and then by hand until a dough is formed.
 % font applied. The optional argument is put in a right-aligned \cs{makebox} the
 % same width as the indent.
 %
+% \begin{macro}{YARIngWrapperHook}
 % The \cs{YARIngWrapperHook} simplifies the implicit syntax discussed below.
 %
 %    \begin{macrocode}
 \def\YARIngWrapperHook{}
 \NewDocumentCommand\YARIng{om}{%
-  \par\YARIngredientFont\hangpara{%
+  \par\yarget{ingredient font}\hangpara{%
     \csname YAR\theYARsection IngDentWidth\endcsname}{1}%
-  \adjustbox{gstore width=\YARtempdim,discard}{\YARIngredientFont#2}%
+  \adjustbox{gstore width=\YARtempdim,discard}{%
+    \yarget{ingredient font}#2}%
   \IfNoValueTF{#1}{%
     \ifdimcomp{\YARtempdim}{>}{\YARWidestIngredient}{%
       \global\deflength{\YARWidestIngredient}{\YARtempdim}}{}%
   }{%
     \ifdimcomp{\YARtempdim}{>}{\YARWidestFoodstuff}{%
       \global\deflength{\YARWidestFoodstuff}{\YARtempdim}}{}%
-    \adjustbox{gstore width=\YARtempdim,discard}{\YARIngredientFont#1\space}%
+    \adjustbox{gstore width=\YARtempdim,discard}{%
+      \yarget{ingredient font}#1\space}%
     \ifdimcomp{\YARtempdim}{>}{\YARWidestIngDent}{%
       \global\deflength{\YARWidestIngDent}{\YARtempdim}}{}%
     \makebox[\csname YAR\theYARsection IngDentWidth\endcsname][r]{#1\space}%
@@ -1149,12 +1246,16 @@ Mix with a fork and then by hand until a dough is formed.
   #2\YARIngWrapperHook
 }
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 %
+% \begin{environment}{YARecipe}
 % When starting a \env{YARecipe}, we process any keys given. We insert the
 % appropriate space before the recipe, and according to the options trigger
 % the recipe being included in the table of contents and page headers, and label
 % it for use as a reference target.
 %
+% \begin{macro}{YARecipeWrapperHook}
 % We then set the right paragraph shape, set the recipe title, then calculate
 % how wide the method column should be. The \cs{YARecipeWrapperHook} simplifies
 % the implicit syntax discussed below.
@@ -1172,28 +1273,32 @@ Mix with a fork and then by hand until a dough is formed.
   \fi
   \ifYARecipeInTOC
     \ifcsdef{phantomsection}{\phantomsection}{}%
-    \yarget{toc level}%
-    \addcontentsline{toc}{\YARtempcs}{#2}%
+    \addcontentsline{toc}{\yarget{toc level}}{#2}%
   \fi
   \ifYARMarkBoth
     \markboth{#2}{#2}%
   \else\ifYARMarkRight
     \markright{#2}%
   \fi\fi
-  \yarget{label}\expandafter\ifblank\expandafter{\YARtempcs}{}{%
+  \yarget[\YARtempcs]{label}%
+  \expandafter\ifblank\expandafter{\YARtempcs}{}{%
     \label{\YARtempcs}\yarset{label=}}%
-  \ifYARnumbered{\YARNumFont\YARDoNum}\fi
-  {\YARTitleFont #2}\IfValueT{#3}{\hfill{\YARNoteFont#3}}\\[-0.75em]
+  \ifYARnumbered{\yarget{recipe number font}\yarget{recipe number format}}\fi
+  {\yarget{title font}#2}%
+  \IfValueT{#3}{\hfill{\yarget{note font}#3}}\\[-0.75em]
   \rule{\linewidth}{0.4pt}%
   \deflength{\parskip}{\YARStepSkip}%
-  \setcounter{YARstep}{\YARStartStep}%
+  \setcounter{YARstep}{\yarget{first step}}%
   \deflength{\YARMethodColWidth}{\linewidth-\csname YAR\theYARsection IngColWidth\endcsname-\csname YAR\theYARsection StepColWidth\endcsname}%
   \par\nopagebreak\YARecipeWrapperHook
 }{%
   \vspace{\YARPostRecipeSkip}%
 }
 %    \end{macrocode}
+% \end{macro}
+% \end{environment}
 %
+% \begin{environment}{YARecipeSteps}
 % With \env{YARecipeSteps}, we basically take \env{YARecipe} and strip out all
 % the parts related to titling and cross-referencing.
 %
@@ -1203,19 +1308,21 @@ Mix with a fork and then by hand until a dough is formed.
   \par\vspace{\YARPreRecipeSkip}%
   \deflength{\parindent}{0pt}%
   \deflength{\parskip}{\YARStepSkip}%
-  \setcounter{YARstep}{\YARStartStep}%
+  \setcounter{YARstep}{\yarget{first step}}%
   \deflength{\YARMethodColWidth}{\linewidth-\csname YAR\theYARsection IngColWidth\endcsname-\csname YAR\theYARsection StepColWidth\endcsname}%
   \par\nopagebreak\YARecipeWrapperHook
 }{%
   \vspace{\YARPostRecipeSkip}%
 }
 %    \end{macrocode}
+% \end{environment}
 %
-% \section{Implicit syntax}
+% \subsection{Implicit syntax}
 %
 % With a bit of wizardry, we can reduce the verbosity needed. The normal user
 % commands expand to the explicit syntax above.
 %
+% \begin{macro}{YARchecknext}
 % \cs{YARchecknext} is used inside a \env{YARIngBox}. It checks if the next
 % token is \cs{ing}, and if it isn't, closes the current \env{YARIngBox} and
 % starts a \env{YARMethodBox}.
@@ -1228,7 +1335,9 @@ Mix with a fork and then by hand until a dough is formed.
   }#1%
 }
 %    \end{macrocode}
+% \end{macro}
 %
+% \begin{environment}{recipe}
 % Using \env{recipe} starts a \env{YARecipe}, but then (using the hooks
 % introduced above) immediately starts a \env{YARIngBox} and begins scanning for
 % \cs{ing} tokens.
@@ -1245,6 +1354,9 @@ Mix with a fork and then by hand until a dough is formed.
   \def\YARecipeWrapperHook{}%
 }
 %    \end{macrocode}
+% \end{environment}
+%
+% \begin{environment}{recipesteps}
 % Using \env{recipesteps} does the same but starts a \env{YARecipeSteps}
 % environment instead.
 %
@@ -1260,7 +1372,9 @@ Mix with a fork and then by hand until a dough is formed.
   \def\YARecipeWrapperHook{}%
 }
 %    \end{macrocode}
+% \end{environment}
 %
+% \begin{macro}{ing}
 % The main thing of interest that \cs{ing} does is check to see if we are in a
 % \env{YARMethodBox} and, if so, closes it and starts a \env{YARIngBox} before
 % calling \cs{YARIng}.
@@ -1271,7 +1385,9 @@ Mix with a fork and then by hand until a dough is formed.
   \YARIng
 }
 %    \end{macrocode}
+% \end{macro}
 %
+% \begin{macro}{newstep}
 % \cs{newstep} manually closes the current \env{YARMethodBox} and starts a new
 % one, inserting an empty \env{YARIngBox} inbetween to preserve the spacing.
 %
@@ -1283,6 +1399,7 @@ Mix with a fork and then by hand until a dough is formed.
   \begin{YARMethodBox}%
 }
 %    \end{macrocode}
+% \end{macro}
 %
 % There is no more.
 %
